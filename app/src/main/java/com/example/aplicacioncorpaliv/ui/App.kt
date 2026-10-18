@@ -24,6 +24,7 @@ import com.example.aplicacioncorpaliv.ui.screens.ContactoScreen
 import com.example.aplicacioncorpaliv.ui.screens.FormularioScreen
 import com.example.aplicacioncorpaliv.ui.screens.InicioScreen
 import com.example.aplicacioncorpaliv.ui.screens.PantallaPrincipal
+import com.example.aplicacioncorpaliv.ui.screens.PerfilScreen
 import com.example.aplicacioncorpaliv.ui.screens.ProductosScreen
 import com.example.aplicacioncorpaliv.ui.screens.ProgramasScreen
 import com.example.aplicacioncorpaliv.ui.screens.QuienesSomosScreen
@@ -96,6 +97,11 @@ fun App() {
                     }
                     "Registros" -> {
                         RegistrosScreen(
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+                    "Perfil" -> {
+                        PerfilScreen(
                             modifier = Modifier.padding(innerPadding)
                         )
                     }

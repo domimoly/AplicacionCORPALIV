@@ -100,6 +100,17 @@ fun AppDrawer(
                         }
                     }
                 )
+
+                NavigationDrawerItem(
+                    label = { Text("Perfil") },
+                    selected = pantallaActual == "Perfil",
+                    onClick = {
+                        onPantallaSeleccionada("Perfil")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    }
+                )
             }
         }
     ) {
