@@ -45,7 +45,7 @@ fun InicioScreen(
                 .align(Alignment.CenterHorizontally)
         )
         Image(
-            painter = painterResource(id = R.drawable.logo_CORPALIV),
+            painter = painterResource(id = R.drawable.logo_corpaliv),
             contentDescription = "Logo CORPALIV",
             modifier = Modifier
                 .size(150.dp)
