@@ -78,6 +78,17 @@ fun AppDrawer(
                         }
                     }
                 )
+
+                NavigationDrawerItem(
+                    label = { Text("Novedades") },
+                    selected = pantallaActual == "Novedades",
+                    onClick = {
+                        onPantallaSeleccionada("Novedades")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    }
+                )
             }
         }
     ) {

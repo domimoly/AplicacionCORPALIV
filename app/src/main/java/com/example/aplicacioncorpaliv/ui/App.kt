@@ -23,6 +23,7 @@ import com.example.aplicacioncorpaliv.ui.componentes.AppTopBar
 import com.example.aplicacioncorpaliv.ui.screens.ColaborarScreen
 import com.example.aplicacioncorpaliv.ui.screens.ContactoScreen
 import com.example.aplicacioncorpaliv.ui.screens.InicioScreen
+import com.example.aplicacioncorpaliv.ui.screens.PantallaPrincipal
 import com.example.aplicacioncorpaliv.ui.screens.ProductosScreen
 import com.example.aplicacioncorpaliv.ui.screens.ProgramasScreen
 import com.example.aplicacioncorpaliv.ui.screens.QuienesSomosScreen
@@ -84,6 +85,11 @@ fun App() {
                     }
                     "Productos" -> {
                         ProductosScreen(
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+                    "Novedades" -> {
+                        PantallaPrincipal(
                             modifier = Modifier.padding(innerPadding)
                         )
                     }
