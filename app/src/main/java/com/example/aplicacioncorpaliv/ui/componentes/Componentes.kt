@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun NuevoMenu(isExpanded: Boolean,onItemClick:(String)-> Unit,onDismiss:()->Unit){
-    val opciones=listOf("Quiénes somos","Programas","Productos","Colaborar")
+    val opciones=listOf("Acerca de","Ayuda","Configuración")
     DropdownMenu(expanded = isExpanded, onDismissRequest = onDismiss) {
         opciones.forEach {opcion->
             DropdownMenuItem(text={
