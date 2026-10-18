@@ -1,10 +1,15 @@
 package com.example.aplicacioncorpaliv.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.aplicacioncorpaliv.data.AppDatabase
+import com.example.aplicacioncorpaliv.data.RegistroRepository
 import com.example.aplicacioncorpaliv.model.FormularioModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class FormularioErrores(
     val nombre: String? = null,
@@ -15,7 +20,9 @@ data class FormularioErrores(
     val categoria: String? = null
 )
 
-class FormularioViewModel : ViewModel() {
+class FormularioViewModel(application: Application) : AndroidViewModel(application) {
+    private val repositorio = RegistroRepository(AppDatabase.getInstance(application).registroDao())
+
     private val _formulario = MutableStateFlow(FormularioModel())
     val formulario: StateFlow<FormularioModel> = _formulario.asStateFlow()
     private val _errores = MutableStateFlow(FormularioErrores())
@@ -97,8 +104,11 @@ class FormularioViewModel : ViewModel() {
         if (!validarFormulario()) {
             return false
         }
-        println("Formulario guardado: ${_formulario.value}")
-        _guardadoCorrectamente.value = true
+        viewModelScope.launch {
+            repositorio.save(_formulario.value)
+            _formulario.value = FormularioModel()
+            _guardadoCorrectamente.value = true
+        }
         return true
     }
     fun ocultarMensajeGuardado() {

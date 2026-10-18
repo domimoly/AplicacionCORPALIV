@@ -27,6 +27,7 @@ import com.example.aplicacioncorpaliv.ui.screens.PantallaPrincipal
 import com.example.aplicacioncorpaliv.ui.screens.ProductosScreen
 import com.example.aplicacioncorpaliv.ui.screens.ProgramasScreen
 import com.example.aplicacioncorpaliv.ui.screens.QuienesSomosScreen
+import com.example.aplicacioncorpaliv.ui.screens.RegistrosScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +91,11 @@ fun App() {
                     }
                     "Novedades" -> {
                         PantallaPrincipal(
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+                    "Registros" -> {
+                        RegistrosScreen(
                             modifier = Modifier.padding(innerPadding)
                         )
                     }

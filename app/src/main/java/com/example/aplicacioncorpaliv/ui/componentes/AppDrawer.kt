@@ -89,6 +89,17 @@ fun AppDrawer(
                         }
                     }
                 )
+
+                NavigationDrawerItem(
+                    label = { Text("Registros") },
+                    selected = pantallaActual == "Registros",
+                    onClick = {
+                        onPantallaSeleccionada("Registros")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    }
+                )
             }
         }
     ) {
