@@ -20,8 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.aplicacioncorpaliv.ui.componentes.AppDrawer
 import com.example.aplicacioncorpaliv.ui.componentes.AppTopBar
-import com.example.aplicacioncorpaliv.ui.screens.ColaborarScreen
 import com.example.aplicacioncorpaliv.ui.screens.ContactoScreen
+import com.example.aplicacioncorpaliv.ui.screens.FormularioScreen
 import com.example.aplicacioncorpaliv.ui.screens.InicioScreen
 import com.example.aplicacioncorpaliv.ui.screens.PantallaPrincipal
 import com.example.aplicacioncorpaliv.ui.screens.ProductosScreen
@@ -94,7 +94,7 @@ fun App() {
                         )
                     }
                     "Colaborar" -> {
-                        ColaborarScreen(
+                        FormularioScreen(
                             modifier = Modifier.padding(innerPadding)
                         )
                     }
