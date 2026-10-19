@@ -122,7 +122,7 @@ fun QuienesSomosScreen(
         }
 
         Text(
-            text = "Nuestro impacto (datos de ejemplo)",
+            text = "Nuestro impacto",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary

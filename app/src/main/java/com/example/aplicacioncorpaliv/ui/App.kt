@@ -72,7 +72,10 @@ fun App() {
                 when (pantallaActual) {
                     "Inicio" -> {
                         InicioScreen(
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.padding(innerPadding),
+                            onPantallaSeleccionada = {
+                                pantallaActual = it
+                            }
                         )
                     }
                     "Quiénes somos" -> {
