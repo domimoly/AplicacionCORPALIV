@@ -33,6 +33,7 @@ fun RegistrosScreen(
 ) {
     var message by remember { mutableStateOf("") }
     val registros by viewModel.registros.collectAsState(initial = emptyList())
+    val contactos by viewModel.contactos.collectAsState(initial = emptyList())
 
     Column(
         modifier = modifier
@@ -44,7 +45,7 @@ fun RegistrosScreen(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text("Colaboraciones recibidas por CORPALIV")
+        Text("Colaboraciones y mensajes recibidos por CORPALIV")
 
         if (message.isNotBlank()) {
             Spacer(Modifier.height(8.dp))
@@ -53,18 +54,20 @@ fun RegistrosScreen(
 
         Spacer(Modifier.height(20.dp))
         Text(
-            text = "Registros guardados (${registros.size})",
+            text = "Colaboraciones (${registros.size})",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.height(8.dp))
 
         if (registros.isEmpty()) {
-            Text("Todavía no hay registros. Envía el primero desde Colaborar.")
+            Text("Todavía no hay colaboraciones. Envía la primera desde Colaborar.")
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
             ) {
                 items(count = registros.size, key = { index -> registros[index].id }) { index ->
                     val registro = registros[index]
@@ -90,6 +93,58 @@ fun RegistrosScreen(
                                     onClick = {
                                         viewModel.eliminar(registro)
                                         message = "Registro eliminado."
+                                    }
+                                ) {
+                                    Text("Eliminar")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "Mensajes de contacto (${contactos.size})",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(Modifier.height(8.dp))
+
+        if (contactos.isEmpty()) {
+            Text("Todavía no hay mensajes. Envía el primero desde Contacto.")
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                items(count = contactos.size, key = { index -> contactos[index].id }) { index ->
+                    val contacto = contactos[index]
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(contacto.nombre, style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            Text(contacto.correo)
+                            Spacer(Modifier.height(4.dp))
+                            Text(contacto.mensaje)
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.eliminarContacto(contacto)
+                                        message = "Mensaje eliminado."
                                     }
                                 ) {
                                     Text("Eliminar")
