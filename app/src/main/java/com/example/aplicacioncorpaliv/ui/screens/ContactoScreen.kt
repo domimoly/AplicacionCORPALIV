@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -81,6 +82,14 @@ fun ContactoScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = errores.nombre != null,
+            trailingIcon = {
+                if (errores.nombre != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
             supportingText = { errores.nombre?.let { Text(it) } }
         )
         OutlinedTextField(
@@ -91,6 +100,14 @@ fun ContactoScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions( keyboardType = KeyboardType.Email ),
             isError = errores.correo != null,
+            trailingIcon = {
+                if (errores.correo != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
             supportingText = { errores.correo?.let { Text(it) } }
         )
         OutlinedTextField(
@@ -100,6 +117,14 @@ fun ContactoScreen(
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             isError = errores.mensaje != null,
+            trailingIcon = {
+                if (errores.mensaje != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
             supportingText = { errores.mensaje?.let { Text(it) }}
         )
 
