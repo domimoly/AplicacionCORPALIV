@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.Alignment
@@ -54,6 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.aplicacioncorpaliv.viewmodel.FormularioViewModel
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -75,10 +80,19 @@ fun FormularioScreen(
     viewModel.guardadoCorrectamente.collectAsState()
 
     var mostrarDatePicker by
-    remember {mutableStateOf(false)
+    remember {
+        mutableStateOf(false)
     }
+    var cargando by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
-    val categorias = listOf("Donación","Voluntariado","Alianza empresarial","Compra de productos","Capacitación")
+    val categorias = listOf(
+        "Donación",
+        "Voluntariado",
+        "Alianza empresarial",
+        "Compra de productos",
+        "Capacitación"
+    )
     var categoriaExpandida by remember { mutableStateOf(false) }
 
     LaunchedEffect(guardadoCorrectamente) {
@@ -118,7 +132,7 @@ fun FormularioScreen(
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             isError = errores.descripcion != null,
-            supportingText = { errores.descripcion?.let { Text(it) }}
+            supportingText = { errores.descripcion?.let { Text(it) } }
         )
 
         OutlinedTextField(
@@ -127,27 +141,33 @@ fun FormularioScreen(
             label = { Text("Monto de aporte (CLP)") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions( keyboardType = KeyboardType.Number ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = errores.cantidad != null,
             supportingText = {
-                if (errores.cantidad != null) { Text(errores.cantidad!! )
+                if (errores.cantidad != null) {
+                    Text(errores.cantidad!!)
                 } else {
-                    Text("Ingrese un valor entre 1000 y 10000" ) }
+                    Text("Ingrese un valor entre 1000 y 10000")
+                }
             }
         )
 
         Row(
-            verticalAlignment = Alignment.CenterVertically ) {
-            Checkbox( checked = formulario.aceptaTerminos,
-                onCheckedChange = { viewModel.actualizarAceptaTerminos(it) } )
-            Text( text = "Acepto ser contactado por CORPALIV"
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = formulario.aceptaTerminos,
+                onCheckedChange = { viewModel.actualizarAceptaTerminos(it) })
+            Text(
+                text = "Acepto ser contactado por CORPALIV"
             )
         }
 
         if (errores.aceptaTerminos != null) {
-            Text( text = errores.aceptaTerminos!!,
+            Text(
+                text = errores.aceptaTerminos!!,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding( start = 12.dp )
+                modifier = Modifier.padding(start = 12.dp)
             )
         }
 
@@ -156,14 +176,19 @@ fun FormularioScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text( text = "Contacto prioritario" )
-            Switch( checked = formulario.activo,
+            Text(text = "Contacto prioritario")
+            Switch(
+                checked = formulario.activo,
                 onCheckedChange = { viewModel.actualizarActivo(it) }
             )
         }
 
-        val fechaTexto = formulario.fecha?.let { SimpleDateFormat("dd/MM/yyyy",
-            Locale.getDefault()).format( Date(it)) } ?: "Seleccionar fecha"
+        val fechaTexto = formulario.fecha?.let {
+            SimpleDateFormat(
+                "dd/MM/yyyy",
+                Locale.getDefault()
+            ).format(Date(it))
+        } ?: "Seleccionar fecha"
 
         OutlinedTextField(
             value = fechaTexto,
@@ -181,14 +206,18 @@ fun FormularioScreen(
         }
 
         if (errores.fecha != null) {
-            Text( text = errores.fecha!!,
-                color = MaterialTheme.colorScheme.error )
+            Text(
+                text = errores.fecha!!,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
-        ExposedDropdownMenuBox( expanded = categoriaExpandida,
-            onExpandedChange = { categoriaExpandida = !categoriaExpandida } )
+        ExposedDropdownMenuBox(
+            expanded = categoriaExpandida,
+            onExpandedChange = { categoriaExpandida = !categoriaExpandida })
         {
-            OutlinedTextField( value = formulario.categoria,
+            OutlinedTextField(
+                value = formulario.categoria,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Tipo de colaboración") },
@@ -196,20 +225,26 @@ fun FormularioScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                isError = errores.categoria != null )
+                isError = errores.categoria != null
+            )
 
-            ExposedDropdownMenu( expanded = categoriaExpandida,
+            ExposedDropdownMenu(
+                expanded = categoriaExpandida,
                 onDismissRequest = { categoriaExpandida = false })
             {
-                categorias.forEach { categoria -> DropdownMenuItem(text = { Text(categoria) },
-                    onClick = { viewModel.actualizarCategoria(categoria )
-                        categoriaExpandida = false } )
+                categorias.forEach { categoria ->
+                    DropdownMenuItem(
+                        text = { Text(categoria) },
+                        onClick = {
+                            viewModel.actualizarCategoria(categoria)
+                            categoriaExpandida = false
+                        })
                 }
             }
         }
 
         if (errores.categoria != null) {
-            Text( text = errores.categoria!!, color = MaterialTheme.colorScheme.error )
+            Text(text = errores.categoria!!, color = MaterialTheme.colorScheme.error)
         }
 
         AnimatedVisibility(
@@ -237,32 +272,57 @@ fun FormularioScreen(
             }
         }
 
-        Spacer( modifier = Modifier.height(10.dp) )
+        Spacer(modifier = Modifier.height(10.dp))
 
-        Button( onClick = { viewModel.guardar() },
-            modifier = Modifier.fillMaxWidth() )
-        {
-            Text("Guardar" )
-        }
-    }
-
-    if (mostrarDatePicker) {
-        val datePickerState = rememberDatePickerState( initialSelectedDateMillis = formulario.fecha )
-        DatePickerDialog( onDismissRequest = { mostrarDatePicker = false },
-            confirmButton = { TextButton( onClick = { viewModel.actualizarFecha(datePickerState.selectedDateMillis)
-                mostrarDatePicker = false } )
-            {
-                Text("Aceptar")
-            }
+        Button(
+            onClick = {
+                scope.launch {
+                    cargando = true
+                    delay(1200)
+                    viewModel.guardar()
+                    cargando = false
+                }
             },
-
-            dismissButton = { TextButton( onClick = { mostrarDatePicker = false } ) {
-                Text("Cancelar" )
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !cargando
+        ) {
+            if (cargando) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Guardando...")
+            } else {
+                Text("Guardar")
             }
-            } ) {
-            DatePicker(
-                state = datePickerState
-            )
+        }
+
+        if (mostrarDatePicker) {
+            val datePickerState =
+                rememberDatePickerState(initialSelectedDateMillis = formulario.fecha)
+            DatePickerDialog(
+                onDismissRequest = { mostrarDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.actualizarFecha(datePickerState.selectedDateMillis)
+                        mostrarDatePicker = false
+                    })
+                    {
+                        Text("Aceptar")
+                    }
+                },
+
+                dismissButton = {
+                    TextButton(onClick = { mostrarDatePicker = false }) {
+                        Text("Cancelar")
+                    }
+                }) {
+                DatePicker(
+                    state = datePickerState
+                )
+            }
         }
     }
 }
