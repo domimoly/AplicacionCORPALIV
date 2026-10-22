@@ -15,17 +15,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import com.example.aplicacioncorpaliv.ui.theme.Green
-import com.example.aplicacioncorpaliv.ui.theme.Negro
+import com.example.aplicacioncorpaliv.ui.theme.MoradoCorpaliv
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
+    titulo: String,
     onMenuClick: () -> Unit
 ) {
     TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = Green,
-        titleContentColor = Negro
+        containerColor = MoradoCorpaliv,
+        titleContentColor = Color.White,
+        actionIconContentColor = Color.White
     ),
         navigationIcon = {
             TextButton(
@@ -34,8 +35,9 @@ fun AppTopBar(
                 Text("MENU",color=Color.White)
             }
         },
-        title = { Text(text="CORPALIV") },
+        title = { Text(text = titulo) },
         actions = {
+            // Guarda si el menú desplegable está abierto (true) o cerrado (false)
             var isMenuOpened by remember { mutableStateOf(false) }
             IconButton(onClick = { isMenuOpened = true }) {
                 Icon(

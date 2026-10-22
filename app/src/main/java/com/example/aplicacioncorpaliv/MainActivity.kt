@@ -12,6 +12,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Punto de entrada de la app | carga el tema y muestra App(), que contiene toda la navegación
         setContent {
             AplicacionCORPALIVTheme {
                 App()

@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
+// las consultas a la tabla. observeAll entrega la lista y se actualiza sola cuando cambian los datos
 @Dao
 interface RegistroDao {
     @Query("SELECT * FROM registros ORDER BY createdAt DESC")

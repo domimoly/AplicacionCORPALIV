@@ -31,22 +31,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.aplicacioncorpaliv.R
 
+// Una cifra ficticia de impacto | el número grande y su descripción
 private data class Cifra(
     val valor: String,
     val detalle: String
 )
 
+// onPantallaSeleccionada es una función que recibe desde App.kt y al llamarla con un nombre ('Colaborar'), App cambia de pantalla
 @Composable
 fun InicioScreen(
     modifier: Modifier = Modifier,
     onPantallaSeleccionada: (String) -> Unit
 ) {
+    // Datos de EJEMPLO (ficticios). Para cambiar una cifra o su texto, se edita esta lista
     val cifras = listOf(
         Cifra("40", "personas en formación"),
         Cifra("8", "empresas aliadas"),
         Cifra("250", "productos elaborados")
     )
 
+    // Todo el contenido va en una columna centrada, con scroll vertical por si la pantalla es pequeña
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -83,7 +87,7 @@ fun InicioScreen(
         }
 
         Text(
-            text = "Nuestro impacto (datos de ejemplo)",
+            text = "Nuestro impacto",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
@@ -93,6 +97,7 @@ fun InicioScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // forEach recorre la lista | por cada cifra dibuja una tarjeta. Weight(1f) reparte el ancho en partes iguales
             cifras.forEach { cifra ->
                 Card(
                     modifier = Modifier.weight(1f),
@@ -122,6 +127,7 @@ fun InicioScreen(
             }
         }
 
+        // Botón 'Quiero colaborar' | llama a la función con el nombre de la pantalla destino
         Button(
             onClick = { onPantallaSeleccionada("Colaborar") },
             modifier = Modifier.fillMaxWidth()

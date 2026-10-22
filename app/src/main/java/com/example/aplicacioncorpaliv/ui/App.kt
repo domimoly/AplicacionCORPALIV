@@ -33,15 +33,18 @@ import com.example.aplicacioncorpaliv.ui.screens.RegistrosScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
+    // Si este valor cambia, la pantalla cambia sola. Lo usan el menú lateral, la barra inferior y los botones del Inicio.
     var pantallaActual by rememberSaveable {
         mutableStateOf("Inicio")
     }
+    // Menú lateral: envuelve toda la pantalla. Recibe la pantalla actual y avisa cuando se elige otra
     AppDrawer(
         pantallaActual = pantallaActual,
         onPantallaSeleccionada = {
             pantallaActual = it
         }
     ) { abrirMenu ->
+        // Barra inferior (en pantallas anchas se convierte en riel lateral). Usa el mismo estado pantallaActual
         NavigationSuiteScaffold(
             navigationSuiteItems = {
                 AppDestinations.entries.forEach {
@@ -63,12 +66,15 @@ fun App() {
                 modifier = Modifier.fillMaxSize(),
                 topBar = {
                     AppTopBar(
+                        titulo = pantallaActual,
                         onMenuClick = {
                             abrirMenu()
                         }
                     )
                 }
             ) { innerPadding ->
+                // Según el texto de pantallaActual se muestra una pantalla u otra.
+                // Para agregar una pantalla: crear su archivo, sumar un caso aquí y un ítem en AppDrawer
                 when (pantallaActual) {
                     "Inicio" -> {
                         InicioScreen(
@@ -124,6 +130,7 @@ fun App() {
     }
 }
 
+// Las 3 opciones de la barra inferior (texto + ícono). Los textos deben coincidir con los del 'when'
 enum class AppDestinations(
     val label: String,
     val icon: ImageVector,

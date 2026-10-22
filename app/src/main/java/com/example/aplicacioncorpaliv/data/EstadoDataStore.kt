@@ -11,6 +11,7 @@ private val Context.dataStore by preferencesDataStore(
     name = "preferencias_estado"
 )
 
+// DataStore nos ayuda a guardar una preferencia simple (verdadero/falso) en el teléfono, sin usar base de datos
 class EstadoDataStore(private val context: Context) {
 
     companion object {

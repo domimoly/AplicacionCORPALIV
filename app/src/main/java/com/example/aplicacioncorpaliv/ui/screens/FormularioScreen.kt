@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -64,12 +65,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Formulario de colaboración | los datos y las validaciones están en FormularioViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormularioScreen(
     modifier: Modifier = Modifier,
     viewModel: FormularioViewModel = viewModel()
 ) {
+    // collectAsState | Sirva para cada vez que el ViewModel cambia un dato, la pantalla se vuelve a dibujar sola
     val formulario by
     viewModel.formulario.collectAsState()
 
@@ -116,6 +119,8 @@ fun FormularioScreen(
         Spacer(
             modifier = Modifier.height(10.dp)
         )
+        // Campo de texto. isError lo pinta en rojo, supportingText muestra el mensaje y trailingIcon el ícono de error (vienen del ViewModel).
+        // AnimatedVisibility hace que el ícono aparezca y desaparezca con fundido
         OutlinedTextField(
             value = formulario.nombre,
             onValueChange = { viewModel.actualizarNombre(it) },
@@ -123,6 +128,14 @@ fun FormularioScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = errores.nombre != null,
+            trailingIcon = {
+                AnimatedVisibility(visible = errores.nombre != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
             supportingText = { errores.nombre?.let { Text(it) } }
         )
         OutlinedTextField(
@@ -132,6 +145,14 @@ fun FormularioScreen(
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             isError = errores.descripcion != null,
+            trailingIcon = {
+                AnimatedVisibility(visible = errores.descripcion != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
             supportingText = { errores.descripcion?.let { Text(it) } }
         )
 
@@ -143,6 +164,14 @@ fun FormularioScreen(
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = errores.cantidad != null,
+            trailingIcon = {
+                AnimatedVisibility(visible = errores.cantidad != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
             supportingText = {
                 if (errores.cantidad != null) {
                     Text(errores.cantidad!!)
@@ -164,11 +193,21 @@ fun FormularioScreen(
         }
 
         if (errores.aceptaTerminos != null) {
-            Text(
-                text = errores.aceptaTerminos!!,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 12.dp)
-            )
+            Row(
+                modifier = Modifier.padding(start = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = errores.aceptaTerminos!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
         }
 
         Row(
@@ -206,12 +245,24 @@ fun FormularioScreen(
         }
 
         if (errores.fecha != null) {
-            Text(
-                text = errores.fecha!!,
-                color = MaterialTheme.colorScheme.error
-            )
+            Row(
+                modifier = Modifier.padding(start = 0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = errores.fecha!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
         }
 
+        // Lista desplegable para elegir el tipo de colaboración
         ExposedDropdownMenuBox(
             expanded = categoriaExpandida,
             onExpandedChange = { categoriaExpandida = !categoriaExpandida })
@@ -244,9 +295,24 @@ fun FormularioScreen(
         }
 
         if (errores.categoria != null) {
-            Text(text = errores.categoria!!, color = MaterialTheme.colorScheme.error)
+            Row(
+                modifier = Modifier.padding(start = 0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = errores.categoria!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
         }
 
+        // ANIMACIÓN: el mensaje de éxito aparece y desaparece con fundido
         AnimatedVisibility(
             visible = guardadoCorrectamente,
             enter = fadeIn() +
@@ -274,6 +340,7 @@ fun FormularioScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        // Botón guardar: muestra 'Guardando...' 1,2 segundos y luego llama a viewModel.guardar()
         Button(
             onClick = {
                 scope.launch {
@@ -300,6 +367,7 @@ fun FormularioScreen(
         }
 
         if (mostrarDatePicker) {
+            // Calendario para elegir la fecha
             val datePickerState =
                 rememberDatePickerState(initialSelectedDateMillis = formulario.fecha)
             DatePickerDialog(

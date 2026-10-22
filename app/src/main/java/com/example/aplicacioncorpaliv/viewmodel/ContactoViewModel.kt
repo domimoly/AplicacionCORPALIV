@@ -36,6 +36,7 @@ class ContactoViewModel(application: Application) : AndroidViewModel(application
     fun actualizarMensaje(valor: String) {
         _formulario.value = _formulario.value.copy(mensaje = valor)
     }
+    // Reglas del formulario | nombre mínimo 3 letras, correo con @ y punto, mensaje mínimo 5 letras
     fun validarFormulario(): Boolean {
         val datos = _formulario.value
         var nombreError: String? = null
