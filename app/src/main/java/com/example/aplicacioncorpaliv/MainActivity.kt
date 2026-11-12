@@ -4,10 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.aplicacioncorpaliv.ui.App
+import com.example.aplicacioncorpaliv.ui.componentes.LocalLectorVoz
+import com.example.aplicacioncorpaliv.ui.componentes.rememberLectorVoz
 import com.example.aplicacioncorpaliv.ui.theme.AplicacionCORPALIVTheme
 import com.example.aplicacioncorpaliv.viewmodel.AccesibilidadViewModel
 
@@ -24,11 +27,17 @@ class MainActivity : ComponentActivity() {
             val nivelTexto by accesibilidadViewModel.nivelTexto.collectAsState()
             val altoContraste by accesibilidadViewModel.altoContraste.collectAsState()
 
+            // EXPLICAR: se crea UN solo lector de voz para toda la app y se comparte con LocalLectorVoz
+            // (los botones 'Escuchar' de las pantallas lo toman de ahí). Ver LectorVoz.kt
+            val lectorVoz = rememberLectorVoz()
+
             AplicacionCORPALIVTheme(
                 nivelTexto = nivelTexto,
                 altoContraste = altoContraste
             ) {
-                App()
+                CompositionLocalProvider(LocalLectorVoz provides lectorVoz) {
+                    App()
+                }
             }
         }
     }

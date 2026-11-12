@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.aplicacioncorpaliv.ui.componentes.ItemDetalle
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.componentes.TarjetaExpandible
 import com.example.aplicacioncorpaliv.ui.theme.AzulClaro
@@ -67,6 +68,10 @@ fun ProgramasScreen(
             Text(
                 text = "Así promovemos la autonomía, la participación y la inclusión social y laboral. Toca cada programa para ver más detalles.",
                 style = MaterialTheme.typography.bodyMedium
+            )
+
+            BotonEscuchar(
+                texto = "Nuestros programas. Tenemos la Escuela Jan Van Dijk para niñas, niños y jóvenes, el Taller Sociolaboral, el programa de Intermediación Laboral, servicios para empresas, y información sobre la Ley de Inclusión Laboral."
             )
 
             TarjetaExpandible(

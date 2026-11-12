@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.theme.AzulClaro
 import com.example.aplicacioncorpaliv.ui.theme.AzulOscuro
@@ -125,6 +126,16 @@ fun ProductosScreen(
             Text(
                 text = "Cada compra apoya la formación y el trabajo de jóvenes y adultos con discapacidad múltiple. Catálogo de ejemplo con precios referenciales.",
                 style = MaterialTheme.typography.bodyMedium
+            )
+
+            // EXPLICAR: el texto a leer se arma con los productos que se ven en ese momento (según el filtro).
+            // joinToString junta cada 'nombre, precio' en una sola frase separada por puntos.
+            BotonEscuchar(
+                texto = "Productos y servicios. " + visibles.joinToString(". ") { producto ->
+                    // Se cambia el signo $ por la palabra 'pesos' para que la voz lo lea bien
+                    val precioHablado = if (producto.precio.startsWith("$")) producto.precio.drop(1) + " pesos" else producto.precio
+                    "${producto.nombre}, $precioHablado"
+                }
             )
 
             // Filtros: una fila con scroll horizontal por si no caben todos (por ejemplo con texto grande)

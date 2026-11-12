@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.aplicacioncorpaliv.ui.componentes.LogoCorpaliv
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.theme.AzulClaro
 import com.example.aplicacioncorpaliv.ui.theme.AzulOscuro
@@ -108,6 +109,10 @@ fun InicioScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
+            )
+
+            BotonEscuchar(
+                texto = "Hola, ¿cómo quieres ayudar? Hace 32 años promovemos la inclusión social y laboral de personas con discapacidad múltiple. Tu aporte puede marcar la diferencia. Puedes donar, conocer quiénes somos, ver nuestros programas o ver nuestros productos."
             )
 
             // Fila de círculos de acceso rápido. forEach dibuja uno por cada elemento de la lista

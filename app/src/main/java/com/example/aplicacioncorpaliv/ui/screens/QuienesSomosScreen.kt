@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 
 // Una institución de CORPALIV (ícono, nombre y descripción corta)
@@ -115,6 +116,10 @@ fun QuienesSomosScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+
+            BotonEscuchar(
+                texto = "Quiénes somos. CORPALIV es una organización sin fines de lucro que promueve la autonomía, la participación y la inclusión social y laboral de personas con discapacidad múltiple. Nuestra misión es acompañar el desarrollo de personas con discapacidad múltiple durante toda su vida. Nuestra visión es contribuir a un país sin barreras para la discapacidad múltiple."
+            )
 
             // Misión, visión y valores: se reutiliza el componente TarjetaConIcono (más abajo)
             TarjetaConIcono(

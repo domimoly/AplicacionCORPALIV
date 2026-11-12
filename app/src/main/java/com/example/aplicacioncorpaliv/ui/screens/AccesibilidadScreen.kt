@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.viewmodel.AccesibilidadViewModel
 
 // PANTALLA DE ACCESIBILIDAD: permite cambiar el tamaño del texto y activar el alto contraste.
@@ -40,6 +41,7 @@ fun AccesibilidadScreen(
     // collectAsState convierte el StateFlow del ViewModel en un estado de Compose: si cambia, la pantalla se redibuja
     val nivelTexto by accesibilidadViewModel.nivelTexto.collectAsState()
     val altoContraste by accesibilidadViewModel.altoContraste.collectAsState()
+    val lecturaVoz by accesibilidadViewModel.lecturaVoz.collectAsState()
 
     // Las 3 opciones de tamaño. La posición en la lista (0, 1, 2) es lo que se guarda
     val opcionesTexto = listOf("Normal", "Grande", "Muy grande")
@@ -143,6 +145,46 @@ fun AccesibilidadScreen(
                     onCheckedChange = { accesibilidadViewModel.cambiarAltoContraste(it) },
                     modifier = Modifier.padding(start = 12.dp)
                 )
+            }
+        }
+
+        // ---------- LEER EN VOZ ALTA ----------
+        // EXPLICAR: si está activado, aparece un botón 'Escuchar' en las pantallas. Al tocarlo, el teléfono lee el texto en voz alta
+        // (ver LectorVoz.kt, donde está explicado cómo funciona). Sirve a quien no ve bien, a quien le cuesta leer o prefiere escuchar.
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Leer en voz alta",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "Muestra un botón Escuchar en las pantallas para que el teléfono lea los textos.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = lecturaVoz,
+                        onCheckedChange = { accesibilidadViewModel.cambiarLecturaVoz(it) },
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
+                // Botón para probar la voz (solo aparece si la opción está activada)
+                BotonEscuchar(texto = "Esta es la voz de la aplicación CORPALIV. Así se escuchan los textos.")
             }
         }
 

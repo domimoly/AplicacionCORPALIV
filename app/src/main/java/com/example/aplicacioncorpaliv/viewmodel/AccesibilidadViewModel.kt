@@ -22,6 +22,10 @@ class AccesibilidadViewModel(application: Application) :
     private val _altoContraste = MutableStateFlow(false)
     val altoContraste = _altoContraste.asStateFlow()
 
+    // Si los botones 'Escuchar' se muestran o no (por defecto sí)
+    private val _lecturaVoz = MutableStateFlow(true)
+    val lecturaVoz = _lecturaVoz.asStateFlow()
+
     // AVANZADO: al iniciar se "escucha" lo guardado con collect. Cada vez que el valor guardado cambia
     // (por ejemplo al presionar una opción), collect lo recibe y actualiza el estado que mira la pantalla.
     init {
@@ -30,6 +34,9 @@ class AccesibilidadViewModel(application: Application) :
         }
         viewModelScope.launch {
             repositorio.altoContraste.collect { _altoContraste.value = it }
+        }
+        viewModelScope.launch {
+            repositorio.lecturaVoz.collect { _lecturaVoz.value = it }
         }
     }
 
@@ -45,11 +52,18 @@ class AccesibilidadViewModel(application: Application) :
         }
     }
 
+    fun cambiarLecturaVoz(activado: Boolean) {
+        viewModelScope.launch {
+            repositorio.guardarLecturaVoz(activado)
+        }
+    }
+
     // Vuelve todo a como estaba al instalar la app
     fun restablecer() {
         viewModelScope.launch {
             repositorio.guardarNivelTexto(0)
             repositorio.guardarAltoContraste(false)
+            repositorio.guardarLecturaVoz(true)
         }
     }
 }

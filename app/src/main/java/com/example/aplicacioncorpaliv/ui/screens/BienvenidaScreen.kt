@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.aplicacioncorpaliv.ui.componentes.LogoCorpaliv
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 
 // PANTALLA DE BIENVENIDA: se muestra una sola vez al abrir la app y da contexto de qué es CORPALIV.
@@ -70,6 +71,11 @@ fun BienvenidaScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
+            )
+
+            // EXPLICAR: lee en voz alta el mensaje de bienvenida (solo se ve si 'Leer en voz alta' está activado)
+            BotonEscuchar(
+                texto = "Bienvenido a CORPALIV. Hace 32 años trabajamos por la inclusión social y laboral de personas con discapacidad múltiple. Con esta app puedes conocer nuestros programas y productos, colaborar con una donación o como voluntario, y escribirnos cuando quieras."
             )
 
             Spacer(modifier = Modifier.size(4.dp))
