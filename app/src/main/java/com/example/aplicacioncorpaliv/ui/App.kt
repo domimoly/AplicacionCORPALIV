@@ -111,12 +111,18 @@ fun App() {
                             }
                             "Programas" -> {
                                 ProgramasScreen(
-                                    modifier = Modifier.padding(innerPadding)
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
                                 )
                             }
                             "Productos" -> {
                                 ProductosScreen(
-                                    modifier = Modifier.padding(innerPadding)
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
                                 )
                             }
                             "Novedades" -> {
