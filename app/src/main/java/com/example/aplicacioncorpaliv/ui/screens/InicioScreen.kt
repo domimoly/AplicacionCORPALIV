@@ -1,6 +1,5 @@
 package com.example.aplicacioncorpaliv.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,10 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.aplicacioncorpaliv.R
+import com.example.aplicacioncorpaliv.ui.componentes.LogoCorpaliv
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.theme.AzulClaro
 import com.example.aplicacioncorpaliv.ui.theme.AzulOscuro
@@ -102,12 +100,8 @@ fun InicioScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo_corpaliv),
-                contentDescription = "Logo CORPALIV",
-                // El logo es ancho: se fija el ANCHO y el alto se calcula solo respetando su proporción
-                modifier = Modifier.width(220.dp)
-            )
+            // El logo es ancho: se fija el ANCHO y el alto se calcula solo respetando su proporción
+            LogoCorpaliv(modifier = Modifier.width(220.dp))
 
             Text(
                 text = "Hola, ¿cómo quieres ayudar?",
@@ -124,7 +118,6 @@ fun InicioScreen(
                 accesos.forEach { acceso ->
                     AccesoRapido(
                         acceso = acceso,
-                        modifier = Modifier.weight(1f),
                         onClick = { onPantallaSeleccionada(acceso.pantalla) }
                     )
                 }

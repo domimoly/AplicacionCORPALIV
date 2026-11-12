@@ -1,5 +1,6 @@
 package com.example.aplicacioncorpaliv.ui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.aplicacioncorpaliv.ui.componentes.AppDrawer
 import com.example.aplicacioncorpaliv.ui.componentes.AppTopBar
+import com.example.aplicacioncorpaliv.ui.screens.AccesibilidadScreen
 import com.example.aplicacioncorpaliv.ui.screens.BienvenidaScreen
 import com.example.aplicacioncorpaliv.ui.screens.ContactoScreen
 import com.example.aplicacioncorpaliv.ui.screens.FormularioScreen
@@ -90,54 +92,63 @@ fun App() {
                 ) { innerPadding ->
                     // Según el texto de pantallaActual se muestra una pantalla u otra.
                     // Para agregar una pantalla: crear su archivo, sumar un caso aquí y un ítem en AppDrawer
-                    when (pantallaActual) {
-                        "Inicio" -> {
-                            InicioScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                onPantallaSeleccionada = {
-                                    pantallaActual = it
-                                }
-                            )
-                        }
-                        "Quiénes somos" -> {
-                            QuienesSomosScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Programas" -> {
-                            ProgramasScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Productos" -> {
-                            ProductosScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Novedades" -> {
-                            PantallaPrincipal(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Registros" -> {
-                            RegistrosScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Perfil" -> {
-                            PerfilScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Colaborar" -> {
-                            FormularioScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        }
-                        "Contacto" -> {
-                            ContactoScreen(
-                                modifier = Modifier.padding(innerPadding)
-                            )
+                    // EXPLICAR: Crossfade hace una transición suave (un desvanecido) cada vez que cambia 'pantallaActual'.
+                    // Dentro, 'pantalla' es la pantalla que se está mostrando en ese momento.
+                    Crossfade(targetState = pantallaActual, label = "cambioDePantalla") { pantalla ->
+                        when (pantalla) {
+                            "Inicio" -> {
+                                InicioScreen(
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
+                                )
+                            }
+                            "Quiénes somos" -> {
+                                QuienesSomosScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Programas" -> {
+                                ProgramasScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Productos" -> {
+                                ProductosScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Novedades" -> {
+                                PantallaPrincipal(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Registros" -> {
+                                RegistrosScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Perfil" -> {
+                                PerfilScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Colaborar" -> {
+                                FormularioScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Contacto" -> {
+                                ContactoScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Accesibilidad" -> {
+                                AccesibilidadScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
                         }
                     }
                 }

@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import com.example.aplicacioncorpaliv.ui.theme.AmarilloAlto
+import com.example.aplicacioncorpaliv.ui.theme.LocalAltoContraste
 import com.example.aplicacioncorpaliv.ui.theme.MoradoOla
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,17 +25,22 @@ fun AppTopBar(
     titulo: String,
     onMenuClick: () -> Unit
 ) {
-    // EXPLICAR: la barra usa MoradoOla, el mismo color de la ola del Inicio, para que se vean como una sola pieza
+    // EXPLICAR: la barra usa el mismo color de la ola del Inicio, para que se vean como una sola pieza.
+    // Con alto contraste pasa a amarillo con letras negras
+    val altoContraste = LocalAltoContraste.current
+    val colorBarra = if (altoContraste) AmarilloAlto else MoradoOla
+    val colorTexto = if (altoContraste) Color.Black else Color.White
+
     TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MoradoOla,
-        titleContentColor = Color.White,
-        actionIconContentColor = Color.White
+        containerColor = colorBarra,
+        titleContentColor = colorTexto,
+        actionIconContentColor = colorTexto
     ),
         navigationIcon = {
             TextButton(
                 onClick = onMenuClick
             ) {
-                Text("MENU",color=Color.White)
+                Text("MENU", color = colorTexto)
             }
         },
         title = { Text(text = titulo) },

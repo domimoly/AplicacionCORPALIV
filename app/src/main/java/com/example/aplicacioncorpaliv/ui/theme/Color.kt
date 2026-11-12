@@ -31,3 +31,8 @@ val TerracotaClaro = Color(0xFFF0E1DC)
 val FondoApp = Color(0xFFFBFAFD)
 val TextoPrincipal = Color(0xFF26233A)
 val TextoSecundario = Color(0xFF4A4660)
+
+// --- Alto contraste (opción del menú Accesibilidad) ---
+val AmarilloAlto = Color(0xFFFFC30D)     // el amarillo del logo, sobre negro se ve muy fuerte
+val GrisOscuroAlto = Color(0xFF262626)   // fondo de tarjetas
+val GrisMedioAlto = Color(0xFF3A3A3A)    // fondo de lo seleccionado
