@@ -1,5 +1,6 @@
 package com.example.aplicacioncorpaliv.ui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.aplicacioncorpaliv.ui.componentes.AppDrawer
 import com.example.aplicacioncorpaliv.ui.componentes.AppTopBar
+import com.example.aplicacioncorpaliv.ui.screens.AccesibilidadScreen
+import com.example.aplicacioncorpaliv.ui.screens.BienvenidaScreen
 import com.example.aplicacioncorpaliv.ui.screens.ContactoScreen
 import com.example.aplicacioncorpaliv.ui.screens.FormularioScreen
 import com.example.aplicacioncorpaliv.ui.screens.InicioScreen
@@ -37,92 +40,122 @@ fun App() {
     var pantallaActual by rememberSaveable {
         mutableStateOf("Inicio")
     }
-    // Menú lateral: envuelve toda la pantalla. Recibe la pantalla actual y avisa cuando se elige otra
-    AppDrawer(
-        pantallaActual = pantallaActual,
-        onPantallaSeleccionada = {
-            pantallaActual = it
-        }
-    ) { abrirMenu ->
-        // Barra inferior (en pantallas anchas se convierte en riel lateral). Usa el mismo estado pantallaActual
-        NavigationSuiteScaffold(
-            navigationSuiteItems = {
-                AppDestinations.entries.forEach {
-                    item(
-                        icon = {
-                            Icon(
-                                imageVector = it.icon,
-                                contentDescription = it.label
-                            )
-                        },
-                        label = { Text(it.label) },
-                        selected = it.label == pantallaActual,
-                        onClick = { pantallaActual = it.label }
-                    )
-                }
+
+    // EXPLICAR: mientras sea true se muestra la pantalla de Bienvenida; al presionar 'Continuar' pasa a false
+    // y aparece la app normal. rememberSaveable evita que vuelva a salir al girar el teléfono
+    var mostrarBienvenida by rememberSaveable {
+        mutableStateOf(true)
+    }
+
+    if (mostrarBienvenida) {
+        BienvenidaScreen(
+            onContinuar = {
+                mostrarBienvenida = false
             }
-        ) {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = {
-                    AppTopBar(
-                        titulo = pantallaActual,
-                        onMenuClick = {
-                            abrirMenu()
-                        }
-                    )
+        )
+    } else {
+        // Menú lateral: envuelve toda la pantalla. Recibe la pantalla actual y avisa cuando se elige otra
+        AppDrawer(
+            pantallaActual = pantallaActual,
+            onPantallaSeleccionada = {
+                pantallaActual = it
+            }
+        ) { abrirMenu ->
+            // Barra inferior (en pantallas anchas se convierte en riel lateral). Usa el mismo estado pantallaActual
+            NavigationSuiteScaffold(
+                navigationSuiteItems = {
+                    AppDestinations.entries.forEach {
+                        item(
+                            icon = {
+                                Icon(
+                                    imageVector = it.icon,
+                                    contentDescription = it.label
+                                )
+                            },
+                            label = { Text(it.label) },
+                            selected = it.label == pantallaActual,
+                            onClick = { pantallaActual = it.label }
+                        )
+                    }
                 }
-            ) { innerPadding ->
-                // Según el texto de pantallaActual se muestra una pantalla u otra.
-                // Para agregar una pantalla: crear su archivo, sumar un caso aquí y un ítem en AppDrawer
-                when (pantallaActual) {
-                    "Inicio" -> {
-                        InicioScreen(
-                            modifier = Modifier.padding(innerPadding),
-                            onPantallaSeleccionada = {
-                                pantallaActual = it
+            ) {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        AppTopBar(
+                            titulo = pantallaActual,
+                            onMenuClick = {
+                                abrirMenu()
                             }
                         )
                     }
-                    "Quiénes somos" -> {
-                        QuienesSomosScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Programas" -> {
-                        ProgramasScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Productos" -> {
-                        ProductosScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Novedades" -> {
-                        PantallaPrincipal(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Registros" -> {
-                        RegistrosScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Perfil" -> {
-                        PerfilScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Colaborar" -> {
-                        FormularioScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                    "Contacto" -> {
-                        ContactoScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
+                ) { innerPadding ->
+                    // Según el texto de pantallaActual se muestra una pantalla u otra.
+                    // Para agregar una pantalla: crear su archivo, sumar un caso aquí y un ítem en AppDrawer
+                    // EXPLICAR: Crossfade hace una transición suave (un desvanecido) cada vez que cambia 'pantallaActual'.
+                    // Dentro, 'pantalla' es la pantalla que se está mostrando en ese momento.
+                    Crossfade(targetState = pantallaActual, label = "cambioDePantalla") { pantalla ->
+                        when (pantalla) {
+                            "Inicio" -> {
+                                InicioScreen(
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
+                                )
+                            }
+                            "Quiénes somos" -> {
+                                QuienesSomosScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Programas" -> {
+                                ProgramasScreen(
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
+                                )
+                            }
+                            "Productos" -> {
+                                ProductosScreen(
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
+                                )
+                            }
+                            "Novedades" -> {
+                                PantallaPrincipal(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Registros" -> {
+                                RegistrosScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Perfil" -> {
+                                PerfilScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Colaborar" -> {
+                                FormularioScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Contacto" -> {
+                                ContactoScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            "Accesibilidad" -> {
+                                AccesibilidadScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                        }
                     }
                 }
             }

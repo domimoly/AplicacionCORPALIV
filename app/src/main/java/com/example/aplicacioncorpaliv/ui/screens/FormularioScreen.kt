@@ -1,5 +1,12 @@
 package com.example.aplicacioncorpaliv.ui.screens
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -32,6 +40,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -50,12 +59,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.viewmodel.FormularioViewModel
 
 import kotlinx.coroutines.delay
@@ -88,6 +99,33 @@ fun FormularioScreen(
     }
     var cargando by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    // =====================================================================================================
+    // DICTADO POR VOZ (hablar en vez de escribir el mensaje)
+    // CÓMO FUNCIONA: es igual que la cámara. La app NO reconoce la voz por sí misma: le pide a Android que abra
+    // su pantalla de 'Habla ahora' (el reconocedor de voz de Google). Cuando la persona termina de hablar,
+    // esa pantalla se cierra y devuelve el texto. Por eso NO hace falta pedir el permiso del micrófono.
+    //  1) rememberLauncherForActivityResult prepara el 'lanzador' y dice QUÉ hacer cuando vuelve el resultado.
+    //  2) El resultado trae una lista de posibles frases (EXTRA_RESULTS); la primera es la más probable.
+    //  3) Esa frase se agrega al mensaje con viewModel.actualizarDescripcion (el mismo método del teclado).
+    // =====================================================================================================
+    val contexto = LocalContext.current
+    val lanzadorVoz = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { resultado ->
+        // RESULT_OK = la persona habló y el reconocedor devolvió algo (si canceló, no se hace nada)
+        if (resultado.resultCode == Activity.RESULT_OK) {
+            val frases = resultado.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val dictado = frases?.firstOrNull()
+            if (!dictado.isNullOrBlank()) {
+                // Si ya había texto, lo dictado se agrega al final; si no, queda como mensaje
+                val actual = formulario.descripcion
+                viewModel.actualizarDescripcion(
+                    if (actual.isBlank()) dictado else "$actual $dictado"
+                )
+            }
+        }
+    }
 
     val categorias = listOf(
         "Donación",
@@ -155,6 +193,52 @@ fun FormularioScreen(
             },
             supportingText = { errores.descripcion?.let { Text(it) } }
         )
+
+        // Botones del mensaje: 'Dictar' (hablar para escribir) y 'Escuchar' (leer en voz alta lo escrito)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    // Intent = 'pedido' a Android. Aquí: reconocer voz, con idioma español de Chile
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(
+                            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                        )
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-CL")
+                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Habla ahora para dictar tu mensaje")
+                    }
+                    // Si el teléfono no tiene reconocedor de voz instalado, launch lanza una excepción: se avisa con un mensaje
+                    try {
+                        lanzadorVoz.launch(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        Toast.makeText(
+                            contexto,
+                            "Tu teléfono no tiene dictado por voz disponible",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Mic,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Dictar")
+            }
+
+            // Solo se muestra si ya hay un mensaje escrito (o dictado) y 'Leer en voz alta' está activado
+            if (formulario.descripcion.isNotBlank()) {
+                BotonEscuchar(
+                    texto = formulario.descripcion,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
         OutlinedTextField(
             value = formulario.cantidad,

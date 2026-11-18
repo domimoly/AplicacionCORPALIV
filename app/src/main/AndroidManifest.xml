@@ -8,6 +8,17 @@
         android:name="android.hardware.camera"
         android:required="false" />
 
+    <!-- Permite a la app encontrar el motor de voz (leer en voz alta) y el reconocedor de voz (dictar).
+         Desde Android 11 hay que declararlo para que el teléfono lo deje usar. No son permisos que se pidan al usuario. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
