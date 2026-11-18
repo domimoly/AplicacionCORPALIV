@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -50,6 +51,11 @@ fun ContactoScreen(
 
     val guardadoCorrectamente by
     viewModel.guardadoCorrectamente.collectAsState()
+
+    // Al abrir la pantalla se rellenan nombre y correo con lo guardado en 'Perfil' (solo los campos vacíos)
+    LaunchedEffect(Unit) {
+        viewModel.precargarDesdePerfil()
+    }
 
     LaunchedEffect(guardadoCorrectamente) {
         if (guardadoCorrectamente) {
@@ -127,6 +133,32 @@ fun ContactoScreen(
             },
             supportingText = { errores.mensaje?.let { Text(it) }}
         )
+
+        // Casilla de privacidad (obligatoria para enviar)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = formulario.aceptaPrivacidad,
+                onCheckedChange = { viewModel.actualizarAceptaPrivacidad(it) }
+            )
+            Text(text = "Acepto la política de privacidad y que CORPALIV me responda")
+        }
+        if (errores.privacidad != null) {
+            Row(
+                modifier = Modifier.padding(start = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = errores.privacidad!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
 
         AnimatedVisibility(
             visible = guardadoCorrectamente,

@@ -1,5 +1,6 @@
 package com.example.aplicacioncorpaliv.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,30 +19,51 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.viewmodel.AccesibilidadViewModel
+import com.example.aplicacioncorpaliv.viewmodel.EstadoViewModel
+import kotlinx.coroutines.delay
 
-// PANTALLA DE ACCESIBILIDAD: permite cambiar el tamaño del texto y activar el alto contraste.
-// EXPLICAR: la app está pensada para personas con distintas discapacidades (visual, motriz, cognitiva),
-// por eso las opciones son simples y con botones grandes. Los cambios se ven al instante en TODA la app
-// y quedan guardados en el teléfono (DataStore) aunque se cierre la app.
+// PANTALLA DE CONFIGURACIÓN: reúne las preferencias de la persona que usa la app, todas guardadas en el teléfono (DataStore).
+// EXPLICAR: tiene dos bloques.
+//  1) Accesibilidad: tamaño del texto, alto contraste y lectura en voz alta (AccesibilidadViewModel).
+//  2) Avisos: si quiere recibir las novedades de CORPALIV (EstadoViewModel). Antes era una pantalla aparte
+//     llamada 'Novedades', pero era solo un interruptor, así que tiene más sentido que viva aquí.
+// Los cambios de accesibilidad se ven al instante en TODA la app y quedan guardados aunque se cierre.
 @Composable
-fun AccesibilidadScreen(
+fun ConfiguracionScreen(
     modifier: Modifier = Modifier,
     // viewModel() entrega el MISMO AccesibilidadViewModel que usa MainActivity para aplicar el tema
-    accesibilidadViewModel: AccesibilidadViewModel = viewModel()
+    accesibilidadViewModel: AccesibilidadViewModel = viewModel(),
+    estadoViewModel: EstadoViewModel = viewModel()
 ) {
     // collectAsState convierte el StateFlow del ViewModel en un estado de Compose: si cambia, la pantalla se redibuja
     val nivelTexto by accesibilidadViewModel.nivelTexto.collectAsState()
     val altoContraste by accesibilidadViewModel.altoContraste.collectAsState()
     val lecturaVoz by accesibilidadViewModel.lecturaVoz.collectAsState()
+
+    // Estado de la preferencia de novedades (viene de EstadoViewModel, que lee y guarda en DataStore)
+    val novedadesActivadas by estadoViewModel.estadoActivado.collectAsState()
+    val cargandoNovedades by estadoViewModel.cargando.collectAsState()
+    val novedadesGuardadas by estadoViewModel.guardadoCorrectamente.collectAsState()
+    val errorNovedades by estadoViewModel.mensajeError.collectAsState()
+
+    // Cuando se guarda bien, el mensaje de éxito se muestra 2 segundos y luego se oculta solo
+    LaunchedEffect(novedadesGuardadas) {
+        if (novedadesGuardadas) {
+            delay(2000)
+            estadoViewModel.ocultarMensajeGuardado()
+        }
+    }
 
     // Las 3 opciones de tamaño. La posición en la lista (0, 1, 2) es lo que se guarda
     val opcionesTexto = listOf("Normal", "Grande", "Muy grande")
@@ -54,13 +76,20 @@ fun AccesibilidadScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Comodidad de uso",
+            text = "Configuración",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
             text = "Ajusta la app a lo que te resulte más cómodo. Los cambios se aplican al instante y se guardan en tu teléfono.",
             style = MaterialTheme.typography.bodyMedium
+        )
+
+        // ======================== BLOQUE 1: ACCESIBILIDAD ========================
+        Text(
+            text = "Accesibilidad",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
         )
 
         // ---------- TAMAÑO DEL TEXTO ----------
@@ -188,12 +217,82 @@ fun AccesibilidadScreen(
             }
         }
 
-        // ---------- RESTABLECER ----------
+        // Vuelve las 3 opciones de accesibilidad a como estaban al instalar la app
         OutlinedButton(
             onClick = { accesibilidadViewModel.restablecer() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Restablecer opciones")
+            Text("Restablecer accesibilidad")
+        }
+
+        // ======================== BLOQUE 2: AVISOS (antes 'Novedades') ========================
+        Text(
+            text = "Avisos",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Novedades de CORPALIV",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        // EXPLICAR: EstadoViewModel tarda un momento en leer lo guardado; mientras tanto 'cargando' es true
+                        Text(
+                            text = if (cargandoNovedades) {
+                                "Cargando preferencia..."
+                            } else if (novedadesActivadas) {
+                                "Novedades activadas: recibirás avisos de nuevos programas y actividades."
+                            } else {
+                                "Novedades desactivadas."
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = novedadesActivadas,
+                        onCheckedChange = { estadoViewModel.guardarEstado(it) },
+                        // mientras se carga la preferencia guardada, el interruptor no se puede tocar
+                        enabled = !cargandoNovedades,
+                        modifier = Modifier.padding(start = 12.dp)
+                    )
+                }
+
+                // Mensaje de éxito: aparece y desaparece con animación (AnimatedVisibility)
+                AnimatedVisibility(visible = novedadesGuardadas) {
+                    Text(
+                        text = "¡Preferencia guardada correctamente!",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Mensaje de error: solo se muestra si el ViewModel informó un problema
+                errorNovedades?.let { mensaje ->
+                    Text(
+                        text = mensaje,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }

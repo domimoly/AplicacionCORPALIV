@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,8 @@ import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 // y App.kt cambia su estado para mostrar la app normal (ver 'mostrarBienvenida' en App.kt).
 @Composable
 fun BienvenidaScreen(
-    onContinuar: () -> Unit
+    onContinuar: () -> Unit,
+    onAccesoGestores: () -> Unit = {}
 ) {
     // Todo va en una columna con scroll (así funciona también en pantallas chicas o en horizontal)
     Column(
@@ -93,8 +95,6 @@ fun BienvenidaScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .navigationBarsPadding()   // deja espacio para los botones del sistema del teléfono
-                .padding(bottom = 24.dp)
         ) {
             Text("Continuar")
             Spacer(modifier = Modifier.width(8.dp))
@@ -102,6 +102,17 @@ fun BienvenidaScreen(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null
             )
+        }
+
+        // EXPLICAR: botón de texto, discreto, para el personal de CORPALIV. No hay registro ni login para visitantes:
+        // el único login de la app es el de los gestores.
+        TextButton(
+            onClick = onAccesoGestores,
+            modifier = Modifier
+                .navigationBarsPadding()   // deja espacio para los botones del sistema del teléfono
+                .padding(bottom = 24.dp)
+        ) {
+            Text("Soy del equipo CORPALIV · Acceso gestores")
         }
     }
 }

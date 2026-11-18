@@ -5,20 +5,25 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aplicacioncorpaliv.data.AppDatabase
 import com.example.aplicacioncorpaliv.data.ContactoRepository
+import com.example.aplicacioncorpaliv.data.PerfilDataStore
 import com.example.aplicacioncorpaliv.model.ContactoModel
+import com.example.aplicacioncorpaliv.model.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class ContactoErrores(
     val nombre: String? = null,
     val correo: String? = null,
-    val mensaje: String? = null
+    val mensaje: String? = null,
+    val privacidad: String? = null
 )
 
 class ContactoViewModel(application: Application) : AndroidViewModel(application) {
     private val repositorio = ContactoRepository(AppDatabase.getInstance(application).contactoDao())
+    private val perfil = PerfilDataStore(application)
 
     private val _formulario = MutableStateFlow(ContactoModel())
     val formulario: StateFlow<ContactoModel> = _formulario.asStateFlow()
@@ -36,35 +41,35 @@ class ContactoViewModel(application: Application) : AndroidViewModel(application
     fun actualizarMensaje(valor: String) {
         _formulario.value = _formulario.value.copy(mensaje = valor)
     }
-    // Reglas del formulario | nombre mínimo 3 letras, correo con @ y punto, mensaje mínimo 5 letras
+    fun actualizarAceptaPrivacidad(valor: Boolean) {
+        _formulario.value = _formulario.value.copy(aceptaPrivacidad = valor)
+    }
+
+    // EXPLICAR: trae el nombre y el correo guardados en 'Perfil' y los escribe en los campos que estén vacíos.
+    // En Perfil el contacto puede ser un teléfono; como aquí se pide un correo, solo se usa si contiene una @.
+    fun precargarDesdePerfil() {
+        viewModelScope.launch {
+            val nombrePerfil = perfil.nombre.first()
+            val contactoPerfil = perfil.medioContacto.first()
+            val correoPerfil = if (contactoPerfil.contains("@")) contactoPerfil else ""
+            val actual = _formulario.value
+            _formulario.value = actual.copy(
+                nombre = actual.nombre.ifBlank { nombrePerfil },
+                correo = actual.correo.ifBlank { correoPerfil }
+            )
+        }
+    }
+
+    // Reglas del formulario | Las reglas están en model/Validaciones.kt (nombre, correo y mensaje). Además se exige aceptar la privacidad
     fun validarFormulario(): Boolean {
         val datos = _formulario.value
-        var nombreError: String? = null
-        var correoError: String? = null
-        var mensajeError: String? = null
 
-        if (datos.nombre.isBlank()) {
-            nombreError = "El nombre es obligatorio"
-        } else if (datos.nombre.length < 3) {
-            nombreError = "El nombre debe tener al menos 3 caracteres"
-        }
-        if (datos.correo.isBlank()) {
-            correoError = "El correo es obligatorio"
-        } else if (!datos.correo.contains("@") || !datos.correo.contains(".")) {
-            correoError = "El correo no tiene un formato válido"
-        }
-        if (datos.mensaje.isBlank()) {
-            mensajeError = "El mensaje es obligatorio"
-        } else if (datos.mensaje.length < 5) {
-            mensajeError = "El mensaje debe tener al menos 5 caracteres"
-        }
-
-        val nuevosErrores =
-            ContactoErrores(
-                nombre = nombreError,
-                correo = correoError,
-                mensaje = mensajeError
-            )
+        val nuevosErrores = ContactoErrores(
+            nombre = Validaciones.nombre(datos.nombre),
+            correo = Validaciones.correo(datos.correo),
+            mensaje = Validaciones.mensaje(datos.mensaje),
+            privacidad = if (datos.aceptaPrivacidad) null else "Debes aceptar la política de privacidad para enviar"
+        )
         _errores.value = nuevosErrores
         return nuevosErrores == ContactoErrores()
     }

@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ícono de CORPALIV: un anillo de cuatro arcos con los colores del logo (morado, rosado, verde y amarillo).
+         Todo queda dentro de la zona segura central (66 x 66) para que no se corte con ninguna forma de ícono. -->
+    <path
+        android:pathData="M59.56,31.68 A23,23 0 0,1 76.32,48.44"
+        android:strokeColor="#000000"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M76.32,59.56 A23,23 0 0,1 59.56,76.32"
+        android:strokeColor="#000000"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M48.44,76.32 A23,23 0 0,1 31.68,59.56"
+        android:strokeColor="#000000"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M31.68,48.44 A23,23 0 0,1 48.44,31.68"
+        android:strokeColor="#000000"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <!-- Punto central -->
+    <path
+        android:pathData="M54,54m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
+        android:fillColor="#000000" />
+</vector>

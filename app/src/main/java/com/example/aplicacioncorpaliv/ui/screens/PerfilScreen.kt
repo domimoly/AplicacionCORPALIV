@@ -8,22 +8,30 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Collections
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,8 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -40,6 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.aplicacioncorpaliv.data.CamaraUriFactory
 import com.example.aplicacioncorpaliv.ui.componentes.ImagenInteligente
 import com.example.aplicacioncorpaliv.viewmodel.PerfilViewModel
+import kotlinx.coroutines.delay
 
 // Pantalla de perfil | usa dos recursos nativos del teléfono, la galería y la cámara
 @Composable
@@ -49,6 +60,18 @@ fun PerfilScreen(
 ) {
     val context = LocalContext.current
     val imagenUri by perfilViewModel.imagenUri.collectAsState()
+    val nombre by perfilViewModel.nombre.collectAsState()
+    val medioContacto by perfilViewModel.medioContacto.collectAsState()
+    val errores by perfilViewModel.errores.collectAsState()
+    val guardado by perfilViewModel.guardadoCorrectamente.collectAsState()
+
+    // El aviso 'Datos guardados' se oculta solo a los 2 segundos
+    LaunchedEffect(guardado) {
+        if (guardado) {
+            delay(2000)
+            perfilViewModel.ocultarMensajeGuardado()
+        }
+    }
 
     var uriPendienteCamara by remember {
         mutableStateOf<Uri?>(null)
@@ -135,12 +158,14 @@ fun PerfilScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // EXPLICAR: ahora la pantalla tiene más contenido, así que se puede desplazar hacia abajo
+            .verticalScroll(rememberScrollState())
             .padding(
                 horizontal = 24.dp,
                 vertical = 28.dp
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
         Text(
             text = "Perfil de colaborador",
@@ -152,7 +177,7 @@ fun PerfilScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Agrega el logo de tu organización",
+            text = "Agrega tu imagen o el logo de tu organización",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -217,6 +242,85 @@ fun PerfilScreen(
                         contentDescription = "Cámara"
                     )
                     Text("  Tomar fotografía")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // TARJETA 'TUS DATOS': el nombre y el contacto se guardan en el teléfono (DataStore) y
+        // se usan para rellenar solos los formularios de Colaborar y Contacto. Los dos son opcionales.
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Tus datos",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Se guardan solo en este teléfono y rellenan los formularios por ti.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { perfilViewModel.actualizarNombre(it) },
+                    label = { Text("Nombre") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = errores.nombre != null,
+                    trailingIcon = {
+                        if (errores.nombre != null) {
+                            Icon(Icons.Filled.Error, contentDescription = "Error")
+                        }
+                    },
+                    supportingText = { errores.nombre?.let { Text(it) } }
+                )
+                OutlinedTextField(
+                    value = medioContacto,
+                    onValueChange = { perfilViewModel.actualizarMedioContacto(it) },
+                    label = { Text("Correo o teléfono") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = errores.medioContacto != null,
+                    trailingIcon = {
+                        if (errores.medioContacto != null) {
+                            Icon(Icons.Filled.Error, contentDescription = "Error")
+                        }
+                    },
+                    supportingText = { errores.medioContacto?.let { Text(it) } }
+                )
+                Button(
+                    onClick = { perfilViewModel.guardarDatos() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Guardar mis datos")
+                }
+                if (guardado) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = "Guardado",
+                            tint = Color(0xFF2E7D32)
+                        )
+                        Text(
+                            text = "Datos guardados",
+                            color = Color(0xFF2E7D32),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                 }
             }
         }

@@ -1,7 +1,11 @@
 package com.example.aplicacioncorpaliv.model
 
+// Los datos que la persona va escribiendo en el formulario Colaborar.
+// EXPLICAR: 'categoria' guarda el CÓDIGO del tipo (por ejemplo 'DONACION'); el nombre bonito se obtiene con TiposColaboracion.nombre().
+// 'medioContacto' es el correo o teléfono para que CORPALIV pueda responder.
 data class FormularioModel(
     val nombre: String = "",
+    val medioContacto: String = "",
     val descripcion: String = "",
     val cantidad: String = "",
     val aceptaTerminos: Boolean = false,

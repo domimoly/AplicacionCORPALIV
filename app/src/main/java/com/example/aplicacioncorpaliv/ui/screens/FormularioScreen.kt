@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -66,6 +69,7 @@ import androidx.compose.ui.unit.dp
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.viewmodel.FormularioViewModel
 
@@ -81,6 +85,7 @@ import java.util.Locale
 @Composable
 fun FormularioScreen(
     modifier: Modifier = Modifier,
+    onVerMisSolicitudes: () -> Unit = {},
     viewModel: FormularioViewModel = viewModel()
 ) {
     // collectAsState | Sirva para cada vez que el ViewModel cambia un dato, la pantalla se vuelve a dibujar sola
@@ -92,6 +97,9 @@ fun FormularioScreen(
 
     val guardadoCorrectamente by
     viewModel.guardadoCorrectamente.collectAsState()
+
+    // Código de seguimiento de la solicitud recién enviada (null = no hay nada que mostrar)
+    val codigoGenerado by viewModel.codigoGenerado.collectAsState()
 
     var mostrarDatePicker by
     remember {
@@ -127,14 +135,14 @@ fun FormularioScreen(
         }
     }
 
-    val categorias = listOf(
-        "Donación",
-        "Voluntariado",
-        "Alianza empresarial",
-        "Compra de productos",
-        "Capacitación"
-    )
+    // EXPLICAR: la lista de tipos vive en model/TipoColaboracion.kt (es la misma que usará el servidor más adelante)
+    val tipos = TiposColaboracion.todos
     var categoriaExpandida by remember { mutableStateOf(false) }
+
+    // Al abrir la pantalla se rellenan nombre y contacto con lo que la persona guardó en 'Perfil'
+    LaunchedEffect(Unit) {
+        viewModel.precargarDesdePerfil()
+    }
 
     LaunchedEffect(guardadoCorrectamente) {
         if (guardadoCorrectamente) {
@@ -175,6 +183,25 @@ fun FormularioScreen(
                 }
             },
             supportingText = { errores.nombre?.let { Text(it) } }
+        )
+        // EXPLICAR: este campo acepta un correo O un teléfono (la regla está en Validaciones.medioContacto)
+        OutlinedTextField(
+            value = formulario.medioContacto,
+            onValueChange = { viewModel.actualizarMedioContacto(it) },
+            label = { Text("Correo o teléfono de contacto") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            isError = errores.medioContacto != null,
+            trailingIcon = {
+                AnimatedVisibility(visible = errores.medioContacto != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Error,
+                        contentDescription = "Error"
+                    )
+                }
+            },
+            supportingText = { errores.medioContacto?.let { Text(it) } }
         )
         OutlinedTextField(
             value = formulario.descripcion,
@@ -240,30 +267,84 @@ fun FormularioScreen(
             }
         }
 
-        OutlinedTextField(
-            value = formulario.cantidad,
-            onValueChange = { viewModel.actualizarCantidad(it) },
-            label = { Text("Monto de aporte (CLP)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = errores.cantidad != null,
-            trailingIcon = {
-                AnimatedVisibility(visible = errores.cantidad != null) {
-                    Icon(
-                        imageVector = Icons.Filled.Error,
-                        contentDescription = "Error"
-                    )
-                }
-            },
-            supportingText = {
-                if (errores.cantidad != null) {
-                    Text(errores.cantidad!!)
-                } else {
-                    Text("Ingrese un valor entre 1000 y 10000")
+        // Lista desplegable para elegir el tipo de colaboración
+        ExposedDropdownMenuBox(
+            expanded = categoriaExpandida,
+            onExpandedChange = { categoriaExpandida = !categoriaExpandida })
+        {
+            OutlinedTextField(
+                value = TiposColaboracion.nombre(formulario.categoria),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Tipo de colaboración") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                isError = errores.categoria != null
+            )
+
+            ExposedDropdownMenu(
+                expanded = categoriaExpandida,
+                onDismissRequest = { categoriaExpandida = false })
+            {
+                tipos.forEach { tipo ->
+                    DropdownMenuItem(
+                        text = { Text(tipo.nombre) },
+                        onClick = {
+                            // Se guarda el CÓDIGO (por ejemplo DONACION), no el nombre que se ve en pantalla
+                            viewModel.actualizarCategoria(tipo.codigo)
+                            categoriaExpandida = false
+                        })
                 }
             }
-        )
+        }
+
+        if (errores.categoria != null) {
+            Row(
+                modifier = Modifier.padding(start = 0.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = MaterialTheme.colorScheme.error
+                )
+                Text(
+                    text = errores.categoria!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
+
+        // EXPLICAR: el monto solo se pide cuando el tipo es Donación. En los demás tipos el campo ni aparece
+        AnimatedVisibility(visible = formulario.categoria == TiposColaboracion.DONACION) {
+            OutlinedTextField(
+                value = formulario.cantidad,
+                onValueChange = { viewModel.actualizarCantidad(it) },
+                label = { Text("Monto de aporte (CLP)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = errores.cantidad != null,
+                trailingIcon = {
+                    AnimatedVisibility(visible = errores.cantidad != null) {
+                        Icon(
+                            imageVector = Icons.Filled.Error,
+                            contentDescription = "Error"
+                        )
+                    }
+                },
+                supportingText = {
+                    if (errores.cantidad != null) {
+                        Text(errores.cantidad!!)
+                    } else {
+                        Text("Desde 1.000 hasta 10.000.000")
+                    }
+                }
+            )
+        }
 
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -272,7 +353,7 @@ fun FormularioScreen(
                 checked = formulario.aceptaTerminos,
                 onCheckedChange = { viewModel.actualizarAceptaTerminos(it) })
             Text(
-                text = "Acepto ser contactado por CORPALIV"
+                text = "Acepto la política de privacidad y que CORPALIV me contacte"
             )
         }
 
@@ -317,83 +398,14 @@ fun FormularioScreen(
             value = fechaTexto,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Fecha preferida de contacto") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = errores.fecha != null
+            label = { Text("Fecha preferida de contacto (opcional)") },
+            modifier = Modifier.fillMaxWidth()
         )
         Button(
             onClick = { mostrarDatePicker = true },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Seleccionar fecha")
-        }
-
-        if (errores.fecha != null) {
-            Row(
-                modifier = Modifier.padding(start = 0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Error,
-                    contentDescription = "Error",
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Text(
-                    text = errores.fecha!!,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
-
-        // Lista desplegable para elegir el tipo de colaboración
-        ExposedDropdownMenuBox(
-            expanded = categoriaExpandida,
-            onExpandedChange = { categoriaExpandida = !categoriaExpandida })
-        {
-            OutlinedTextField(
-                value = formulario.categoria,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Tipo de colaboración") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                isError = errores.categoria != null
-            )
-
-            ExposedDropdownMenu(
-                expanded = categoriaExpandida,
-                onDismissRequest = { categoriaExpandida = false })
-            {
-                categorias.forEach { categoria ->
-                    DropdownMenuItem(
-                        text = { Text(categoria) },
-                        onClick = {
-                            viewModel.actualizarCategoria(categoria)
-                            categoriaExpandida = false
-                        })
-                }
-            }
-        }
-
-        if (errores.categoria != null) {
-            Row(
-                modifier = Modifier.padding(start = 0.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Error,
-                    contentDescription = "Error",
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Text(
-                    text = errores.categoria!!,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
         }
 
         // ANIMACIÓN: el mensaje de éxito aparece y desaparece con fundido
@@ -419,6 +431,47 @@ fun FormularioScreen(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 8.dp)
                 )
+            }
+        }
+
+        // TARJETA CON EL CÓDIGO DE SEGUIMIENTO: aparece al enviar y se queda hasta que la persona la cierre.
+        // EXPLICAR: SelectionContainer permite mantener presionado el código para copiarlo.
+        codigoGenerado?.let { codigo ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Tu código de seguimiento",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    SelectionContainer {
+                        Text(
+                            text = codigo,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Text("Anótalo: con este código puedes consultar el estado de tu solicitud en 'Mis solicitudes'.")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = {
+                            viewModel.cerrarCodigo()
+                            onVerMisSolicitudes()
+                        }) {
+                            Text("Ver mis solicitudes")
+                        }
+                        TextButton(onClick = { viewModel.cerrarCodigo() }) {
+                            Text("Cerrar")
+                        }
+                    }
+                }
             }
         }
 
