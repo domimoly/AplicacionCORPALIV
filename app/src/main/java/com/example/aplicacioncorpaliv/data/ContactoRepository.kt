@@ -3,6 +3,7 @@ package com.example.aplicacioncorpaliv.data
 import com.example.aplicacioncorpaliv.model.ContactoModel
 import kotlinx.coroutines.flow.Flow
 
+// El repositorio de contactos es la misma idea que RegistroRepository
 class ContactoRepository(private val dao: ContactoDao) {
     val contactos: Flow<List<Contacto>> = dao.observeAll()
 

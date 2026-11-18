@@ -53,6 +53,7 @@ class FormularioViewModel(application: Application) : AndroidViewModel(applicati
     fun actualizarCategoria(valor: String) {
         _formulario.value = _formulario.value.copy(categoria = valor)
     }
+    // Reglas de validacion | Para cambiar una regla se edita este bloque
     fun validarFormulario(): Boolean {
         val datos = _formulario.value
         var nombreError: String? = null
@@ -72,6 +73,7 @@ class FormularioViewModel(application: Application) : AndroidViewModel(applicati
         } else if (datos.descripcion.length < 5) {
             descripcionError = "El mensaje debe tener al menos 5 caracteres"
         }
+        // Regla del monto | debe ser un número entre 1000 y 10000
         val cantidad = datos.cantidad.toIntOrNull()
         if (cantidad == null) {
             cantidadError = "Debe ingresar un número"
@@ -100,6 +102,7 @@ class FormularioViewModel(application: Application) : AndroidViewModel(applicati
         _errores.value = nuevosErrores
         return nuevosErrores == FormularioErrores()
     }
+    // Si todo es válido | Se guarda en Room, vacía el formulario y avisa con guardadoCorrectamente
     fun guardar(): Boolean {
         if (!validarFormulario()) {
             return false

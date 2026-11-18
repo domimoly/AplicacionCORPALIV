@@ -41,6 +41,7 @@ import com.example.aplicacioncorpaliv.data.CamaraUriFactory
 import com.example.aplicacioncorpaliv.ui.componentes.ImagenInteligente
 import com.example.aplicacioncorpaliv.viewmodel.PerfilViewModel
 
+// Pantalla de perfil | usa dos recursos nativos del teléfono, la galería y la cámara
 @Composable
 fun PerfilScreen(
     modifier: Modifier = Modifier,
@@ -53,6 +54,7 @@ fun PerfilScreen(
         mutableStateOf<Uri?>(null)
     }
 
+    // 2 | Recurso integrado: GALERÍA |  abre el selector de imágenes del sistema (no necesita permiso)
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uriSeleccionado ->
@@ -61,6 +63,7 @@ fun PerfilScreen(
         )
     }
 
+    // 1 | Recurso integrado: - CÁMARA | toma la foto y la guarda en la dirección (URI) que le entregamos
     val camaraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { exito ->
@@ -75,6 +78,7 @@ fun PerfilScreen(
     }
 
     // Solicita permiso si todavía no está concedido.
+    // Pide el permiso de cámara al usuario. Si lo acepta abre la cámara; si no, muestra un aviso
     val permisoCamaraLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
@@ -101,6 +105,7 @@ fun PerfilScreen(
         }
 
     // Comprueba el permiso antes de abrir la cámara.
+    // Revisa si ya hay permiso de cámara | si lo hay abre la cámara, si no lo pide
     fun tomarFotografia() {
         val permisoConcedido =
             ContextCompat.checkSelfPermission(
