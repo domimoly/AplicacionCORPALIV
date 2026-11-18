@@ -21,12 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.aplicacioncorpaliv.ui.componentes.AppDrawer
 import com.example.aplicacioncorpaliv.ui.componentes.AppTopBar
-import com.example.aplicacioncorpaliv.ui.screens.AccesibilidadScreen
 import com.example.aplicacioncorpaliv.ui.screens.BienvenidaScreen
+import com.example.aplicacioncorpaliv.ui.screens.ConfiguracionScreen
 import com.example.aplicacioncorpaliv.ui.screens.ContactoScreen
 import com.example.aplicacioncorpaliv.ui.screens.FormularioScreen
+import com.example.aplicacioncorpaliv.ui.screens.GestorScreen
+import com.example.aplicacioncorpaliv.ui.screens.ImpactoScreen
 import com.example.aplicacioncorpaliv.ui.screens.InicioScreen
-import com.example.aplicacioncorpaliv.ui.screens.PantallaPrincipal
 import com.example.aplicacioncorpaliv.ui.screens.PerfilScreen
 import com.example.aplicacioncorpaliv.ui.screens.ProductosScreen
 import com.example.aplicacioncorpaliv.ui.screens.ProgramasScreen
@@ -125,12 +126,17 @@ fun App() {
                                     }
                                 )
                             }
-                            "Novedades" -> {
-                                PantallaPrincipal(
-                                    modifier = Modifier.padding(innerPadding)
+                            // Historias e indicadores de impacto. Su botón final lleva a 'Colaborar'
+                            "Impacto" -> {
+                                ImpactoScreen(
+                                    modifier = Modifier.padding(innerPadding),
+                                    onPantallaSeleccionada = {
+                                        pantallaActual = it
+                                    }
                                 )
                             }
-                            "Registros" -> {
+                            // Antes 'Registros': muestra las solicitudes enviadas con su estado
+                            "Mis solicitudes" -> {
                                 RegistrosScreen(
                                     modifier = Modifier.padding(innerPadding)
                                 )
@@ -150,8 +156,15 @@ fun App() {
                                     modifier = Modifier.padding(innerPadding)
                                 )
                             }
-                            "Accesibilidad" -> {
-                                AccesibilidadScreen(
+                            // Antes 'Accesibilidad'. Incluye también el interruptor de novedades (antes pantalla 'Novedades')
+                            "Configuración" -> {
+                                ConfiguracionScreen(
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            // Login del gestor y, una vez dentro, panel para cambiar el estado de las solicitudes
+                            "Acceso gestores" -> {
+                                GestorScreen(
                                     modifier = Modifier.padding(innerPadding)
                                 )
                             }

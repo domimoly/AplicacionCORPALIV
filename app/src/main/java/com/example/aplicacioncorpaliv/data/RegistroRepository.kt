@@ -21,6 +21,12 @@ class RegistroRepository(private val dao: RegistroDao) {
         )
     }
 
+    // EXPLICAR: copy() crea una copia de la solicitud cambiando solo estas dos cosas; el resto queda igual.
+    // Luego el DAO actualiza esa fila en la base de datos.
+    suspend fun cambiarEstado(registro: Registro, estado: String, observacion: String) {
+        dao.update(registro.copy(estado = estado, observacion = observacion.trim()))
+    }
+
     suspend fun delete(registro: Registro) {
         dao.delete(registro)
     }

@@ -20,12 +20,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.aplicacioncorpaliv.model.EstadoSolicitud
+import com.example.aplicacioncorpaliv.ui.componentes.EtiquetaEstado
 import com.example.aplicacioncorpaliv.viewmodel.RegistrosViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+// PANTALLA MIS SOLICITUDES (antes 'Registros de interés').
+// EXPLICAR: muestra las colaboraciones que la persona envió desde 'Colaborar' y, para cada una, EN QUÉ ESTADO VA
+// (Recibida, En revisión, Contactado, Concretado o Descartado) y el mensaje del equipo si lo hay.
+// El estado lo cambia el gestor desde 'Acceso gestores'. También se pueden ver los mensajes enviados desde 'Contacto'.
 @Composable
 fun RegistrosScreen(
     modifier: Modifier = Modifier,
@@ -41,11 +51,11 @@ fun RegistrosScreen(
             .padding(20.dp)
     ) {
         Text(
-            text = "Registros de interés",
+            text = "Mis solicitudes",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text("Colaboraciones y mensajes recibidos por CORPALIV")
+        Text("Revisa en qué estado va cada solicitud que enviaste a CORPALIV")
 
         if (message.isNotBlank()) {
             Spacer(Modifier.height(8.dp))
@@ -78,12 +88,48 @@ fun RegistrosScreen(
                         )
                     ) {
                         Column(Modifier.padding(12.dp)) {
-                            Text(registro.nombre, style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold)
+                            // Nombre a la izquierda y etiqueta del estado a la derecha
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = registro.nombre,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                EtiquetaEstado(estado = registro.estado)
+                            }
                             Spacer(Modifier.height(4.dp))
+                            // Frase simple que explica qué significa el estado actual
+                            Text(
+                                text = EstadoSolicitud.descripcion(registro.estado),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            // Mensaje del gestor (solo aparece si escribió una observación)
+                            if (registro.observacion.isNotBlank()) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Mensaje del equipo: ${registro.observacion}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
                             Text("${registro.tipo} - ${registro.monto} CLP")
                             Spacer(Modifier.height(4.dp))
                             Text(registro.mensaje)
+                            Spacer(Modifier.height(4.dp))
+                            // Fecha en que se envió (createdAt se guarda como número de milisegundos; aquí se convierte a texto)
+                            Text(
+                                text = "Enviada el " + SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                                    .format(Date(registro.createdAt)),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             Spacer(Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -92,7 +138,7 @@ fun RegistrosScreen(
                                 OutlinedButton(
                                     onClick = {
                                         viewModel.eliminar(registro)
-                                        message = "Registro eliminado."
+                                        message = "Solicitud eliminada."
                                     }
                                 ) {
                                     Text("Eliminar")
