@@ -21,11 +21,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // FIRMA DEL APK: datos del archivo corpaliv.jks (está en la raíz del proyecto, una carpeta más arriba que 'app').
+    // EXPLICAR: el APK debe estar firmado digitalmente para poder publicarse; esta es la llave que lo firma.
+    // Las claves están escritas aquí solo porque es un proyecto académico con una llave de práctica.
+    signingConfigs {
+        create("release") {
+            storeFile = file("../corpaliv.jks")
+            storePassword = "corpaliv2026"
+            keyAlias = "corpaliv"
+            keyPassword = "corpaliv2026"
+        }
+    }
+
     buildTypes {
         debug {
             enableUnitTestCoverage = true
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
