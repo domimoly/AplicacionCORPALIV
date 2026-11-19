@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.rememberDatePickerState
@@ -45,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -397,19 +400,29 @@ fun FormularioScreen(
             ).format(Date(it))
         } ?: "Seleccionar fecha"
 
+        // EXPLICAR: un SOLO campo para la fecha. Se muestra la fecha elegida (o 'Seleccionar fecha') y al tocarlo se abre el calendario.
+        // AVANZADO: enabled = false hace que el toque lo reciba el 'clickable' de afuera; los colores se fuerzan para que no se vea gris.
         OutlinedTextField(
             value = fechaTexto,
             onValueChange = {},
-            readOnly = true,
+            enabled = false,
             label = { Text("Fecha preferida de contacto (opcional)") },
-            modifier = Modifier.fillMaxWidth()
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.DateRange,
+                    contentDescription = "Abrir calendario"
+                )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { mostrarDatePicker = true }
         )
-        Button(
-            onClick = { mostrarDatePicker = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Seleccionar fecha")
-        }
 
         // ANIMACIÓN: el mensaje de éxito aparece y desaparece con fundido
         AnimatedVisibility(
