@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class EstadoViewModel(application: Application) :
-    AndroidViewModel(application) {
+// AVANZADO: @JvmOverloads hace que Kotlin cree también el constructor que recibe SOLO 'application' (el que usa viewModel() en la app).
+// Los demás parámetros tienen un valor por defecto, y en los tests unitarios se reemplazan por objetos falsos (MockK).
+class EstadoViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repositorio: EstadoDataStore = EstadoDataStore(application)
+) : AndroidViewModel(application) {
 
-    private val repositorio = EstadoDataStore(application)
 
     private val _estadoActivado = MutableStateFlow(false)
     val estadoActivado = _estadoActivado.asStateFlow()

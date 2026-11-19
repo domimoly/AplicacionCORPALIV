@@ -29,13 +29,13 @@ sealed interface ResultadoConsulta {
     data class Encontrada(val seguimiento: Seguimiento) : ResultadoConsulta
 }
 
-class RegistrosViewModel(application: Application) :
-    AndroidViewModel(application) {
-
-    private val baseDeDatos = AppDatabase.getInstance(application)
-
-    private val repositorio = RegistroRepository(baseDeDatos.registroDao())
-    private val repositorioContactos = ContactoRepository(baseDeDatos.contactoDao())
+// AVANZADO: @JvmOverloads hace que Kotlin cree también el constructor que recibe SOLO 'application' (el que usa viewModel() en la app).
+// Los demás parámetros tienen un valor por defecto, y en los tests unitarios se reemplazan por objetos falsos (MockK).
+class RegistrosViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repositorio: RegistroRepository = RegistroRepository(AppDatabase.getInstance(application).registroDao()),
+    private val repositorioContactos: ContactoRepository = ContactoRepository(AppDatabase.getInstance(application).contactoDao())
+) : AndroidViewModel(application) {
 
     val registros: Flow<List<Registro>> = repositorio.registros
     val contactos: Flow<List<Contacto>> = repositorioContactos.contactos

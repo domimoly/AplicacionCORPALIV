@@ -20,8 +20,12 @@ data class PerfilErrores(
 // PERFIL: la imagen (cámara o galería) y los datos de la persona (nombre y correo o teléfono).
 // EXPLICAR: antes esta clase era un ViewModel simple. Ahora es AndroidViewModel porque necesita el contexto de la app
 // para usar DataStore (donde se guardan el nombre y el contacto en el teléfono).
-class PerfilViewModel(application: Application) : AndroidViewModel(application) {
-    private val dataStore = PerfilDataStore(application)
+// AVANZADO: @JvmOverloads hace que Kotlin cree también el constructor que recibe SOLO 'application' (el que usa viewModel() en la app).
+// Los demás parámetros tienen un valor por defecto, y en los tests unitarios se reemplazan por objetos falsos (MockK).
+class PerfilViewModel @JvmOverloads constructor(
+    application: Application,
+    private val dataStore: PerfilDataStore = PerfilDataStore(application)
+) : AndroidViewModel(application) {
 
     private val _imagenUri = MutableStateFlow<Uri?>(null)
     val imagenUri: StateFlow<Uri?> = _imagenUri.asStateFlow()

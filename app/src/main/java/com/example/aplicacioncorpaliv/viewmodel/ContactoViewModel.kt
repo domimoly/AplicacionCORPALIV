@@ -22,9 +22,13 @@ data class ContactoErrores(
     val privacidad: String? = null
 )
 
-class ContactoViewModel(application: Application) : AndroidViewModel(application) {
-    private val repositorio = ContactoRepository(AppDatabase.getInstance(application).contactoDao())
-    private val perfil = PerfilDataStore(application)
+// AVANZADO: @JvmOverloads hace que Kotlin cree también el constructor que recibe SOLO 'application' (el que usa viewModel() en la app).
+// Los demás parámetros tienen un valor por defecto, y en los tests unitarios se reemplazan por objetos falsos (MockK).
+class ContactoViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repositorio: ContactoRepository = ContactoRepository(AppDatabase.getInstance(application).contactoDao()),
+    private val perfil: PerfilDataStore = PerfilDataStore(application)
+) : AndroidViewModel(application) {
 
     private val _formulario = MutableStateFlow(ContactoModel())
     val formulario: StateFlow<ContactoModel> = _formulario.asStateFlow()

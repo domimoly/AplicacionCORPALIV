@@ -11,10 +11,13 @@ import kotlinx.coroutines.launch
 // EXPLICAR: este ViewModel guarda las opciones de accesibilidad. Lo usan DOS lugares:
 // MainActivity (para aplicar el tamaño de texto y el contraste a TODA la app) y la pantalla Accesibilidad
 // (para cambiarlas). Los dos reciben el MISMO objeto, porque viewModel() entrega uno por Activity.
-class AccesibilidadViewModel(application: Application) :
-    AndroidViewModel(application) {
+// AVANZADO: @JvmOverloads hace que Kotlin cree también el constructor que recibe SOLO 'application' (el que usa viewModel() en la app).
+// Los demás parámetros tienen un valor por defecto, y en los tests unitarios se reemplazan por objetos falsos (MockK).
+class AccesibilidadViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repositorio: AccesibilidadDataStore = AccesibilidadDataStore(application)
+) : AndroidViewModel(application) {
 
-    private val repositorio = AccesibilidadDataStore(application)
 
     private val _nivelTexto = MutableStateFlow(0)
     val nivelTexto = _nivelTexto.asStateFlow()
