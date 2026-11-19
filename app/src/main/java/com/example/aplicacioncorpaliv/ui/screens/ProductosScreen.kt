@@ -18,13 +18,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Accessibility
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Spa
-import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -33,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,7 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.aplicacioncorpaliv.ui.componentes.AvisoConexion
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.theme.AzulClaro
@@ -55,47 +57,37 @@ import com.example.aplicacioncorpaliv.ui.theme.TerracotaClaro
 import com.example.aplicacioncorpaliv.ui.theme.TerracotaOscuro
 import com.example.aplicacioncorpaliv.ui.theme.VerdeAzuladoClaro
 import com.example.aplicacioncorpaliv.ui.theme.VerdeAzuladoOscuro
+import com.example.aplicacioncorpaliv.viewmodel.ProductosViewModel
 
-// Un producto o servicio del catálogo: sus datos y los colores de su círculo
-private data class Producto(
+// Ícono y colores del círculo de cada producto, según su categoría
+private data class EstiloProducto(
     val icono: ImageVector,
-    val nombre: String,
-    val categoria: String,
-    val descripcion: String,
-    val precio: String,
     val colorFondo: Color,
     val colorIcono: Color
 )
 
+// EXPLICAR: el servidor entrega cada producto con el NOMBRE de su categoría. Esta función elige el ícono y los colores
+// según ese nombre. Si llega una categoría nueva, usa el estilo del 'else'.
+private fun estiloProducto(categoria: String): EstiloProducto = when (categoria) {
+    "Bienestar" -> EstiloProducto(Icons.Filled.Spa, VerdeAzuladoClaro, VerdeAzuladoOscuro)
+    "Servicios" -> EstiloProducto(Icons.Filled.School, AzulClaro, AzulOscuro)
+    "Otros" -> EstiloProducto(Icons.Filled.ShoppingBag, MoradoClaro, MoradoOscuro)
+    else -> EstiloProducto(Icons.Filled.Lightbulb, TerracotaClaro, TerracotaOscuro)
+}
+
 // PANTALLA PRODUCTOS: catálogo con filtro por categoría.
-// EXPLICAR: los productos están basados en el catálogo público de Alba Lab. Son DATOS DE EJEMPLO
-// (precios referenciales), no un catálogo oficial.
+// EXPLICAR: los productos ya NO están escritos en la pantalla: vienen del microservicio ms-catalogo (Retrofit) a través
+// de ProductosViewModel. Son DATOS DE EJEMPLO (precios referenciales), no un catálogo oficial.
+// Si el servidor no responde, se muestran datos de respaldo y un botón 'Reintentar'.
 @Composable
 fun ProductosScreen(
     modifier: Modifier = Modifier,
-    onPantallaSeleccionada: (String) -> Unit = {}
+    onPantallaSeleccionada: (String) -> Unit = {},
+    viewModel: ProductosViewModel = viewModel()
 ) {
-    // Lista de productos y servicios. Para agregar uno, se copia un bloque Producto(...) y se cambian los datos
-    val productos = listOf(
-        Producto(Icons.Filled.Spa, "Difusor de aroma 100 ml", "Bienestar",
-            "Ambienta tu espacio con aromas suaves, hecho a mano.", "\$7.500", VerdeAzuladoClaro, VerdeAzuladoOscuro),
-        Producto(Icons.Filled.Spa, "Difusor de aroma 250 ml", "Bienestar",
-            "Formato grande para hogares y oficinas.", "\$12.000", VerdeAzuladoClaro, VerdeAzuladoOscuro),
-        Producto(Icons.Filled.Spa, "Difusor de varilla", "Bienestar",
-            "Aroma continuo y decoración en un solo producto.", "\$17.000", VerdeAzuladoClaro, VerdeAzuladoOscuro),
-        Producto(Icons.Filled.Whatshot, "Guatero de semillas grande", "Bienestar",
-            "Calor natural para relajar, relleno con semillas.", "\$11.990", RosaClaro, RosaOscuro),
-        Producto(Icons.Filled.Lightbulb, "Farol de luz", "Otros",
-            "Luz cálida para dar un toque especial a cualquier rincón.", "\$11.900", TerracotaClaro, TerracotaOscuro),
-        Producto(Icons.Filled.ShoppingBag, "Bolsa Alba Lab", "Otros",
-            "Bolsa reutilizable con el sello de Alba Lab.", "\$4.000", MoradoClaro, MoradoOscuro),
-        Producto(Icons.Filled.School, "Capacitación en inclusión", "Servicios",
-            "Charla o taller para equipos de empresas y organizaciones.", "A cotizar", AzulClaro, AzulOscuro),
-        Producto(Icons.Filled.Groups, "Experiencia de concientización", "Servicios",
-            "Actividad práctica para comprender la discapacidad múltiple.", "A cotizar", AzulClaro, AzulOscuro),
-        Producto(Icons.Filled.Accessibility, "Evaluación de accesibilidad", "Servicios",
-            "Revisión de espacios y procesos para que sean accesibles.", "A cotizar", AzulClaro, AzulOscuro)
-    )
+    val productos by viewModel.productos.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     // EXPLICAR: las categorías salen de la propia lista (map + distinct), así que si se agrega un producto
     // con una categoría nueva, aparece sola como filtro. 'Todos' se agrega al principio.
@@ -126,6 +118,13 @@ fun ProductosScreen(
             Text(
                 text = "Cada compra apoya la formación y el trabajo de jóvenes y adultos con discapacidad múltiple. Catálogo de ejemplo con precios referenciales.",
                 style = MaterialTheme.typography.bodyMedium
+            )
+
+            // Barra de carga y mensaje de error (con botón Reintentar)
+            AvisoConexion(
+                cargando = cargando,
+                error = error,
+                onReintentar = { viewModel.cargar() }
             )
 
             // EXPLICAR: el texto a leer se arma con los productos que se ven en ese momento (según el filtro).
@@ -168,18 +167,29 @@ fun ProductosScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.Top
                         ) {
+                            val estilo = estiloProducto(producto.categoria)
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(producto.colorFondo),
+                                    .background(estilo.colorFondo),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = producto.icono,
-                                    contentDescription = null,
-                                    tint = producto.colorIcono
-                                )
+                                // Si el servidor entrega una imagen (Coil la descarga) se muestra; si no, el ícono de la categoría
+                                if (!producto.imagenUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = producto.imagenUrl,
+                                        contentDescription = producto.nombre,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = estilo.icono,
+                                        contentDescription = null,
+                                        tint = estilo.colorIcono
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {

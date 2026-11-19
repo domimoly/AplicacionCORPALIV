@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.aplicacioncorpaliv.ui.componentes.AvisoConexion
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.componentes.TarjetaExpandible
@@ -38,7 +39,7 @@ import com.example.aplicacioncorpaliv.viewmodel.ImpactoViewModel
 
 // PANTALLA IMPACTO: muestra los indicadores (números) y las historias de impacto de CORPALIV.
 // EXPLICAR: la pantalla NO tiene los datos escritos: los pide a ImpactoViewModel con collectAsState.
-// Así, cuando los datos vengan del backend, esta pantalla casi no cambia.
+// ImpactoViewModel los trae del microservicio ms-contenidos (Retrofit) y, si no hay conexión, usa datos de ejemplo.
 // Las historias usan TarjetaExpandible, el mismo componente de la pantalla Programas.
 @Composable
 fun ImpactoScreen(
@@ -48,6 +49,8 @@ fun ImpactoScreen(
 ) {
     val indicadores by viewModel.indicadores.collectAsState()
     val historias by viewModel.historias.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     // Colores que se van repitiendo en las historias (fondo del círculo, color del ícono)
     val colores = listOf(
@@ -77,6 +80,13 @@ fun ImpactoScreen(
                 text = "Lo que logramos gracias a quienes confían en CORPALIV.",
                 style = MaterialTheme.typography.bodyMedium
             )
+            // Barra de carga y mensaje de error (con botón Reintentar)
+            AvisoConexion(
+                cargando = cargando,
+                error = error,
+                onReintentar = { viewModel.cargar() }
+            )
+
             BotonEscuchar(
                 texto = "Nuestro impacto. Lo que logramos gracias a quienes confían en CORPALIV. " +
                         "Hace 32 años promovemos la inclusión social y laboral de personas con discapacidad múltiple."
@@ -110,7 +120,7 @@ fun ImpactoScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = indicador.valor.toString(),
+                                    text = indicador.valorTexto,
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
@@ -22,9 +23,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.example.aplicacioncorpaliv.ui.componentes.ItemDetalle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.aplicacioncorpaliv.ui.componentes.AvisoConexion
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.ui.componentes.OlaDecorativa
 import com.example.aplicacioncorpaliv.ui.componentes.TarjetaExpandible
@@ -38,16 +47,40 @@ import com.example.aplicacioncorpaliv.ui.theme.TerracotaClaro
 import com.example.aplicacioncorpaliv.ui.theme.TerracotaOscuro
 import com.example.aplicacioncorpaliv.ui.theme.VerdeAzuladoClaro
 import com.example.aplicacioncorpaliv.ui.theme.VerdeAzuladoOscuro
+import com.example.aplicacioncorpaliv.viewmodel.ProgramasViewModel
+
+// Ícono y colores de cada programa según su categoría
+private data class EstiloPrograma(
+    val icono: ImageVector,
+    val colorFondo: Color,
+    val colorIcono: Color
+)
+
+// EXPLICAR: el servidor entrega cada programa con su categoría (por ejemplo "Educación").
+// Esta función elige el ícono y los colores según esa categoría. Si llega una categoría nueva, usa el estilo del 'else'.
+private fun estiloPrograma(categoria: String): EstiloPrograma = when (categoria) {
+    "Educación" -> EstiloPrograma(Icons.Filled.School, MoradoClaro, MoradoOscuro)
+    "Formación laboral" -> EstiloPrograma(Icons.Filled.Groups, VerdeAzuladoClaro, VerdeAzuladoOscuro)
+    "Inclusión laboral" -> EstiloPrograma(Icons.Filled.Work, AzulClaro, AzulOscuro)
+    "Servicios a empresas" -> EstiloPrograma(Icons.Filled.Business, TerracotaClaro, TerracotaOscuro)
+    else -> EstiloPrograma(Icons.Filled.Info, RosaClaro, RosaOscuro)
+}
 
 // PANTALLA PROGRAMAS: cada programa es una tarjeta que se despliega al tocarla (componente TarjetaExpandible).
-// EXPLICAR: la información está basada en lo que CORPALIV publica en su sitio web (corpaliv.cl).
-// Para agregar un programa se copia un bloque TarjetaExpandible { ... } y se cambian los textos.
+// EXPLICAR: los programas ya NO están escritos en la pantalla: se piden al microservicio ms-contenidos con Retrofit
+// a través de ProgramasViewModel. Si el servidor no responde, se muestran datos de respaldo y un botón 'Reintentar'.
+// Para agregar un programa nuevo ya no se toca el código: se crea en el backend.
 // onPantallaSeleccionada es la función de App.kt que cambia de pantalla (aquí lleva a 'Contacto').
 @Composable
 fun ProgramasScreen(
     modifier: Modifier = Modifier,
-    onPantallaSeleccionada: (String) -> Unit = {}
+    onPantallaSeleccionada: (String) -> Unit = {},
+    viewModel: ProgramasViewModel = viewModel()
 ) {
+    val programas by viewModel.programas.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+    val error by viewModel.error.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -70,78 +103,44 @@ fun ProgramasScreen(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            BotonEscuchar(
-                texto = "Nuestros programas. Tenemos la Escuela Jan Van Dijk para niñas, niños y jóvenes, el Taller Sociolaboral, el programa de Intermediación Laboral, servicios para empresas, y información sobre la Ley de Inclusión Laboral."
+            // Barra de carga y mensaje de error (con botón Reintentar)
+            AvisoConexion(
+                cargando = cargando,
+                error = error,
+                onReintentar = { viewModel.cargar() }
             )
 
-            TarjetaExpandible(
-                icono = Icons.Filled.School,
-                colorFondoIcono = MoradoClaro,
-                colorIcono = MoradoOscuro,
-                titulo = "Escuela Jan Van Dijk",
-                resumen = "Educación para niñas, niños y jóvenes"
-            ) {
-                Text("Escuela especial gratuita para estudiantes con discapacidad múltiple y/o sordoceguera.")
-                ItemDetalle("Niveles desde Medio Menor hasta 6° básico")
-                ItemDetalle("Equipo de psicología, terapia ocupacional y fonoaudiología")
-                ItemDetalle("Trabajo cercano con las familias")
-                ItemDetalle("Autorizada por el Ministerio de Educación")
-            }
+            // El texto a leer se arma con los programas que llegaron (joinToString junta los nombres en una frase)
+            BotonEscuchar(
+                texto = "Nuestros programas. " + programas.joinToString(". ") { programa ->
+                    programa.nombre + ", " + programa.resumen
+                }
+            )
 
-            TarjetaExpandible(
-                icono = Icons.Filled.Groups,
-                colorFondoIcono = VerdeAzuladoClaro,
-                colorIcono = VerdeAzuladoOscuro,
-                titulo = "Taller Sociolaboral",
-                resumen = "Alba Lab · formación para jóvenes y adultos"
-            ) {
-                Text("Espacio para explorar intereses y desarrollar habilidades para el trabajo.")
-                ItemDetalle("Dirigido a jóvenes y adultos con discapacidad múltiple")
-                ItemDetalle("Exploración y asesoramiento para la inclusión laboral")
-                ItemDetalle("Se financia en parte con donaciones de empresas")
-            }
-
-            TarjetaExpandible(
-                icono = Icons.Filled.Work,
-                colorFondoIcono = AzulClaro,
-                colorIcono = AzulOscuro,
-                titulo = "Intermediación Laboral",
-                resumen = "Alba Lab · del taller al primer empleo"
-            ) {
-                Text("Acompaña el paso al trabajo y conecta a las personas con empresas.")
-                ItemDetalle("Análisis del puesto de trabajo")
-                ItemDetalle("Acompañamiento durante la inserción laboral")
-                ItemDetalle("Orientación para la empresa y su equipo")
-            }
-
-            TarjetaExpandible(
-                icono = Icons.Filled.Business,
-                colorFondoIcono = TerracotaClaro,
-                colorIcono = TerracotaOscuro,
-                titulo = "Servicios para empresas",
-                resumen = "Capacitación, accesibilidad y más"
-            ) {
-                Text("Alba Lab ofrece a empresas y organizaciones:")
-                ItemDetalle("Capacitaciones en inclusión y discapacidad")
-                ItemDetalle("Experiencias de concientización")
-                ItemDetalle("Análisis de puesto de trabajo")
-                ItemDetalle("Políticas de inclusión laboral")
-                ItemDetalle("Acompañamiento de inserción laboral")
-                ItemDetalle("Evaluación de accesibilidad universal")
-                ItemDetalle("Búsqueda inclusiva de personas (hunting inclusivo)")
-            }
-
-            TarjetaExpandible(
-                icono = Icons.Filled.Info,
-                colorFondoIcono = RosaClaro,
-                colorIcono = RosaOscuro,
-                titulo = "Ley de Inclusión Laboral",
-                resumen = "Ley 21.015 y donaciones de empresas"
-            ) {
-                Text("Las empresas con 100 o más trabajadores deben contar con al menos un 1% de personas con discapacidad.")
-                ItemDetalle("Si no pueden cumplirlo, existe la alternativa de donar a una fundación habilitada")
-                ItemDetalle("CORPALIV puede recibir estas donaciones, que ayudan a financiar el Taller Sociolaboral")
-                ItemDetalle("Para conocer los detalles, escríbenos desde Contacto")
+            // EXPLICAR: forEach repite una tarjeta por cada programa de la lista, sin importar cuántos haya
+            programas.forEach { programa ->
+                val estilo = estiloPrograma(programa.categoria)
+                TarjetaExpandible(
+                    icono = estilo.icono,
+                    colorFondoIcono = estilo.colorFondo,
+                    colorIcono = estilo.colorIcono,
+                    titulo = programa.nombre,
+                    resumen = programa.resumen
+                ) {
+                    // Coil (AsyncImage) descarga y muestra la imagen del programa solo si el servidor entrega una URL
+                    if (!programa.imagenUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = programa.imagenUrl,
+                            contentDescription = programa.nombre,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    }
+                    Text(programa.descripcion)
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))

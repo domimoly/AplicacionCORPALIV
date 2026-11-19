@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permite a la app conectarse a internet (Retrofit: microservicios y API externa) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature
@@ -27,6 +30,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AplicacionCORPALIV">
 
         <!-- Proveedor para compartir la URI de la fotografía -->
