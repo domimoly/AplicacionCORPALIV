@@ -11,4 +11,7 @@ object ApiConfig {
     const val VINCULACION = "http://$HOST:9092/"   // ms-vinculacion: solicitudes de colaboración
     const val ADMIN = "http://$HOST:9093/"         // ms-admin: login de gestores
     const val CATALOGO = "http://$HOST:9094/"      // ms-catalogo: productos y servicios
+
+    // API EXTERNA (no es nuestra): Nager.Date entrega los feriados de cada país. Es gratis y no pide clave
+    const val NAGER = "https://date.nager.at/"
 }

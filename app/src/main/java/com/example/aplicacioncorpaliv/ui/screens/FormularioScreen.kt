@@ -70,6 +70,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
+import com.example.aplicacioncorpaliv.ui.componentes.TarjetaFeriados
 import com.example.aplicacioncorpaliv.viewmodel.FormularioViewModel
 
 import kotlinx.coroutines.delay
@@ -164,6 +165,9 @@ fun FormularioScreen(
         Spacer(
             modifier = Modifier.height(10.dp)
         )
+        // Datos de una API EXTERNA (Nager.Date). Es independiente del formulario y de los microservicios
+        TarjetaFeriados()
+        Spacer(modifier = Modifier.height(10.dp))
         // Campo de texto. isError lo pinta en rojo, supportingText muestra el mensaje y trailingIcon el ícono de error (vienen del ViewModel).
         // AnimatedVisibility hace que el ícono aparezca y desaparezca con fundido
         OutlinedTextField(

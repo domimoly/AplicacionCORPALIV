@@ -41,4 +41,9 @@ object RetrofitInstance {
     val admin: AdminApi by lazy {
         crear(ApiConfig.ADMIN).create(AdminApi::class.java)
     }
+
+    // API externa: usa la misma forma de conexión, pero con la dirección de Nager.Date
+    val feriados: FeriadosApi by lazy {
+        crear(ApiConfig.NAGER).create(FeriadosApi::class.java)
+    }
 }
