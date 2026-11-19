@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.aplicacioncorpaliv.data.AppDatabase
 import com.example.aplicacioncorpaliv.data.PerfilDataStore
 import com.example.aplicacioncorpaliv.data.RegistroRepository
+import com.example.aplicacioncorpaliv.data.remote.mensajeDeError
 import com.example.aplicacioncorpaliv.model.FormularioModel
 import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.model.Validaciones
@@ -36,6 +37,13 @@ class FormularioViewModel(application: Application) : AndroidViewModel(applicati
     val errores: StateFlow<FormularioErrores> = _errores.asStateFlow()
     private val _guardadoCorrectamente = MutableStateFlow(false)
     val guardadoCorrectamente: StateFlow<Boolean> = _guardadoCorrectamente.asStateFlow()
+
+    // EXPLICAR: 'enviando' es true mientras se espera la respuesta del servidor (la pantalla muestra una ruedita).
+    // 'errorEnvio' guarda el mensaje si el servidor no respondió o rechazó los datos.
+    private val _enviando = MutableStateFlow(false)
+    val enviando: StateFlow<Boolean> = _enviando.asStateFlow()
+    private val _errorEnvio = MutableStateFlow<String?>(null)
+    val errorEnvio: StateFlow<String?> = _errorEnvio.asStateFlow()
 
     // Código de seguimiento de la última solicitud enviada. Se muestra en pantalla hasta que la persona lo cierre
     private val _codigoGenerado = MutableStateFlow<String?>(null)
@@ -101,18 +109,30 @@ class FormularioViewModel(application: Application) : AndroidViewModel(applicati
         _errores.value = nuevosErrores
         return nuevosErrores == FormularioErrores()
     }
-    // Si todo es válido | Se guarda en Room, vacía el formulario, guarda el código de seguimiento y avisa con guardadoCorrectamente
+    // Si todo es válido | ENVÍA la solicitud al servidor. Solo si el servidor la acepta: vacía el formulario,
+    // guarda el código de seguimiento que entregó el servidor y avisa con guardadoCorrectamente.
+    // EXPLICAR: try/catch atrapa los errores (servidor apagado, datos rechazados) para que la app no se cierre sola.
     fun guardar(): Boolean {
         if (!validarFormulario()) {
             return false
         }
         viewModelScope.launch {
-            val codigo = repositorio.save(_formulario.value)
-            _formulario.value = FormularioModel()
-            _codigoGenerado.value = codigo
-            _guardadoCorrectamente.value = true
+            _enviando.value = true
+            _errorEnvio.value = null
+            try {
+                val codigo = repositorio.save(_formulario.value)
+                _formulario.value = FormularioModel()
+                _codigoGenerado.value = codigo
+                _guardadoCorrectamente.value = true
+            } catch (e: Exception) {
+                _errorEnvio.value = mensajeDeError(e)
+            }
+            _enviando.value = false
         }
         return true
+    }
+    fun cerrarErrorEnvio() {
+        _errorEnvio.value = null
     }
     fun ocultarMensajeGuardado() {
         _guardadoCorrectamente.value = false

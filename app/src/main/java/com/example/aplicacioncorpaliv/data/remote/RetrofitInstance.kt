@@ -33,4 +33,12 @@ object RetrofitInstance {
     val catalogo: CatalogoApi by lazy {
         crear(ApiConfig.CATALOGO).create(CatalogoApi::class.java)
     }
+
+    val vinculacion: VinculacionApi by lazy {
+        crear(ApiConfig.VINCULACION).create(VinculacionApi::class.java)
+    }
+
+    val admin: AdminApi by lazy {
+        crear(ApiConfig.ADMIN).create(AdminApi::class.java)
+    }
 }

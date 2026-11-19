@@ -51,6 +51,9 @@ fun ContactoScreen(
 
     val guardadoCorrectamente by
     viewModel.guardadoCorrectamente.collectAsState()
+    // 'enviando' = esperando al servidor; 'errorEnvio' = motivo si falló
+    val enviando by viewModel.enviando.collectAsState()
+    val errorEnvio by viewModel.errorEnvio.collectAsState()
 
     // Al abrir la pantalla se rellenan nombre y correo con lo guardado en 'Perfil' (solo los campos vacíos)
     LaunchedEffect(Unit) {
@@ -187,10 +190,19 @@ fun ContactoScreen(
 
         Spacer( modifier = Modifier.height(10.dp) )
 
+        errorEnvio?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Button( onClick = { viewModel.guardar() },
+            enabled = !enviando,
             modifier = Modifier.fillMaxWidth() )
         {
-            Text("Enviar" )
+            Text(if (enviando) "Enviando..." else "Enviar")
         }
     }
 }

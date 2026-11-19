@@ -8,17 +8,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.aplicacioncorpaliv.data.Registro
 import com.example.aplicacioncorpaliv.model.CodigoSeguimiento
 import com.example.aplicacioncorpaliv.model.EstadoSolicitud
+import com.example.aplicacioncorpaliv.model.Seguimiento
 import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.EtiquetaEstado
 import com.example.aplicacioncorpaliv.viewmodel.RegistrosViewModel
@@ -56,6 +61,11 @@ fun RegistrosScreen(
     val registros by viewModel.registros.collectAsState(initial = emptyList())
     val contactos by viewModel.contactos.collectAsState(initial = emptyList())
     val consulta by viewModel.consulta.collectAsState()
+    val actualizando by viewModel.actualizando.collectAsState()
+    val aviso by viewModel.aviso.collectAsState()
+
+    // EXPLICAR: LaunchedEffect(Unit) se ejecuta UNA vez al abrir la pantalla: pide al servidor los estados al día
+    LaunchedEffect(Unit) { viewModel.actualizar() }
 
     LazyColumn(
         modifier = modifier
@@ -73,6 +83,10 @@ fun RegistrosScreen(
             if (message.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(message, color = MaterialTheme.colorScheme.primary)
+            }
+            aviso?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, color = MaterialTheme.colorScheme.error)
             }
         }
 
@@ -114,7 +128,7 @@ fun RegistrosScreen(
                             }
                         }
                     }
-                    // EXPLICAR: 'when' revisa cuál de los 4 resultados posibles hay y muestra algo distinto en cada caso
+                    // EXPLICAR: 'when' revisa cuál de los resultados posibles hay y muestra algo distinto en cada caso
                     when (val resultado = consulta) {
                         ResultadoConsulta.SinConsultar -> {}
                         ResultadoConsulta.CodigoInvalido ->
@@ -124,13 +138,16 @@ fun RegistrosScreen(
                             )
                         ResultadoConsulta.NoEncontrada ->
                             Text(
-                                "No encontramos una solicitud con ese código en este teléfono.",
+                                "No encontramos una solicitud con ese código.",
                                 color = MaterialTheme.colorScheme.error
                             )
+                        ResultadoConsulta.Consultando -> CircularProgressIndicator()
+                        is ResultadoConsulta.Error ->
+                            Text(resultado.mensaje, color = MaterialTheme.colorScheme.error)
                         is ResultadoConsulta.Encontrada ->
                             Card(modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(12.dp)) {
-                                    DetalleSolicitud(resultado.registro)
+                                    DetalleSeguimiento(resultado.seguimiento)
                                 }
                             }
                     }
@@ -148,6 +165,17 @@ fun RegistrosScreen(
             )
             if (registros.isEmpty()) {
                 Text("Todavía no hay colaboraciones. Envía la primera desde Colaborar.")
+            } else {
+                // Vuelve a preguntar al servidor por el estado de cada solicitud
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { viewModel.actualizar() }, enabled = !actualizando) {
+                        Text("Actualizar estados")
+                    }
+                    if (actualizando) {
+                        Spacer(Modifier.width(12.dp))
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    }
+                }
             }
         }
         items(count = registros.size, key = { index -> "r" + registros[index].id }) { index ->
@@ -286,5 +314,46 @@ private fun DetalleSolicitud(registro: Registro) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+// Resultado de consultar con el código: el servidor solo entrega el estado (sin datos personales)
+@Composable
+private fun DetalleSeguimiento(seguimiento: Seguimiento) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = TiposColaboracion.nombre(seguimiento.tipo),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            EtiquetaEstado(estado = seguimiento.estado)
+        }
+        SelectionContainer {
+            Text(
+                text = "Código: ${seguimiento.codigoSeguimiento}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = EstadoSolicitud.descripcion(seguimiento.estado),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        if (!seguimiento.observacion.isNullOrBlank()) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Mensaje del equipo: ${seguimiento.observacion}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }

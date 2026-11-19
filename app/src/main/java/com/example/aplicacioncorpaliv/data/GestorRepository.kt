@@ -1,31 +1,34 @@
 package com.example.aplicacioncorpaliv.data
 
-import java.security.MessageDigest
+import com.example.aplicacioncorpaliv.data.remote.AdminApi
+import com.example.aplicacioncorpaliv.data.remote.RetrofitInstance
+import com.example.aplicacioncorpaliv.data.remote.VinculacionApi
+import com.example.aplicacioncorpaliv.model.CambioEstado
+import com.example.aplicacioncorpaliv.model.LoginRequest
+import com.example.aplicacioncorpaliv.model.LoginResponse
+import com.example.aplicacioncorpaliv.model.Solicitud
 
-// REPOSITORIO DEL GESTOR: decide si el correo y la clave ingresados corresponden a un gestor de vinculación.
-// EXPLICAR: por ahora hay UN gestor de demostración (datos ficticios). Más adelante esto se reemplaza por una llamada
-// al microservicio ms-admin (POST /auth/login), que devuelve un token JWT, igual que el auth-service del ejemplo.
-// IMPORTANTE: la clave NO está escrita en el código; solo está su 'hash'. Un hash es el resultado de pasar la clave
-// por una función matemática de una sola vía (SHA-256): de la clave se obtiene el hash, pero del hash no se puede volver a la clave.
-// Al iniciar sesión se calcula el hash de lo que escribió la persona y se compara con el guardado.
-class GestorRepository {
-
-    private val correoGestor = "gestor@ejemplo.cl"
-    private val nombreGestor = "Gestor de vinculación (demo)"
-    // Hash SHA-256 de la clave de demostración
-    private val hashClave = "1ea6483ea38259c29dd48a7b82de36ea39ef1907f5f1ac84638d527fe18feb8e"
-
-    // Devuelve el nombre del gestor si los datos son correctos, o null si no lo son
-    fun iniciarSesion(correo: String, clave: String): String? {
-        val correoCorrecto = correo.trim().lowercase() == correoGestor
-        val claveCorrecta = calcularHash(clave) == hashClave
-        return if (correoCorrecto && claveCorrecta) nombreGestor else null
+// REPOSITORIO DEL GESTOR: habla con ms-admin (login) y con ms-vinculacion (solicitudes).
+// EXPLICAR: ya no hay una clave de demostración dentro de la app. La clave se envía al servidor (ms-admin), que la compara
+// con la guardada (cifrada con BCrypt) y, si es correcta, devuelve un TOKEN JWT. Ese token se envía en cada llamada
+// del gestor con el formato "Bearer <token>" para demostrar que ya inició sesión.
+class GestorRepository(
+    private val adminApi: AdminApi = RetrofitInstance.admin,
+    private val vinculacionApi: VinculacionApi = RetrofitInstance.vinculacion
+) {
+    suspend fun iniciarSesion(correo: String, clave: String): LoginResponse {
+        return adminApi.login(LoginRequest(correo.trim().lowercase(), clave))
     }
 
-    // Convierte un texto en su hash SHA-256 (64 caracteres hexadecimales)
-    private fun calcularHash(texto: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(texto.toByteArray())
-        // Cada byte se escribe con 2 caracteres hexadecimales ("%02x") y se unen todos en un solo texto
-        return bytes.joinToString("") { "%02x".format(it) }
+    suspend fun listar(token: String): List<Solicitud> = vinculacionApi.listar(bearer(token))
+
+    suspend fun cambiarEstado(token: String, id: Int, estado: String, observacion: String): Solicitud {
+        return vinculacionApi.cambiarEstado(bearer(token), id.toLong(), CambioEstado(estado, observacion.trim()))
     }
+
+    suspend fun eliminar(token: String, id: Int) {
+        vinculacionApi.eliminar(bearer(token), id.toLong())
+    }
+
+    private fun bearer(token: String) = "Bearer $token"
 }

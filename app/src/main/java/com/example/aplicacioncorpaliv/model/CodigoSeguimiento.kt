@@ -3,8 +3,7 @@ package com.example.aplicacioncorpaliv.model
 // CÓDIGO DE SEGUIMIENTO de una solicitud, por ejemplo 'COL-7KQ4M2XA'.
 // EXPLICAR: la persona no inicia sesión, así que este código es lo que le permite consultar el estado de SU solicitud
 // (en 'Mis solicitudes'). Se arma con letras y números sin caracteres confusos (sin 0, O, 1, I).
-// AVANZADO: por ahora el código se crea aquí, en el teléfono. Cuando se conecte ms-vinculacion, el código lo creará el
-// servidor (con el mismo formato) y la app solo lo guardará.
+// AVANZADO: ahora el código lo crea el SERVIDOR (ms-vinculacion) con este mismo formato y la app solo lo guarda.
 object CodigoSeguimiento {
     private const val CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     private const val LARGO = 8

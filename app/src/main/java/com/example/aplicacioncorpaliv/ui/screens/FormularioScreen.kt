@@ -56,7 +56,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.Alignment
@@ -74,7 +73,6 @@ import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
 import com.example.aplicacioncorpaliv.viewmodel.FormularioViewModel
 
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -105,8 +103,9 @@ fun FormularioScreen(
     remember {
         mutableStateOf(false)
     }
-    var cargando by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+    // EXPLICAR: 'enviando' viene del ViewModel y es true mientras se espera la respuesta del servidor. 'errorEnvio' trae el mensaje si falló
+    val cargando by viewModel.enviando.collectAsState()
+    val errorEnvio by viewModel.errorEnvio.collectAsState()
 
     // =====================================================================================================
     // DICTADO POR VOZ (hablar en vez de escribir el mensaje)
@@ -477,16 +476,18 @@ fun FormularioScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Botón guardar: muestra 'Guardando...' 1,2 segundos y luego llama a viewModel.guardar()
+        // Si el servidor no respondió o rechazó los datos, se muestra el motivo en rojo
+        errorEnvio?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        // Botón guardar: llama a viewModel.guardar(), que envía la solicitud al servidor y muestra 'Enviando...' mientras espera
         Button(
-            onClick = {
-                scope.launch {
-                    cargando = true
-                    delay(1200)
-                    viewModel.guardar()
-                    cargando = false
-                }
-            },
+            onClick = { viewModel.guardar() },
             modifier = Modifier.fillMaxWidth(),
             enabled = !cargando
         ) {
@@ -497,7 +498,7 @@ fun FormularioScreen(
                     strokeWidth = 2.dp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Guardando...")
+                Text("Enviando...")
             } else {
                 Text("Guardar")
             }

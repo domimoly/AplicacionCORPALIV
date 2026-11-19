@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.aplicacioncorpaliv.data.AppDatabase
 import com.example.aplicacioncorpaliv.data.ContactoRepository
 import com.example.aplicacioncorpaliv.data.PerfilDataStore
+import com.example.aplicacioncorpaliv.data.remote.mensajeDeError
 import com.example.aplicacioncorpaliv.model.ContactoModel
 import com.example.aplicacioncorpaliv.model.Validaciones
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,12 @@ class ContactoViewModel(application: Application) : AndroidViewModel(application
     val errores: StateFlow<ContactoErrores> = _errores.asStateFlow()
     private val _guardadoCorrectamente = MutableStateFlow(false)
     val guardadoCorrectamente: StateFlow<Boolean> = _guardadoCorrectamente.asStateFlow()
+
+    // Igual que en el formulario de colaboración: 'enviando' mientras se espera al servidor y 'errorEnvio' si falla
+    private val _enviando = MutableStateFlow(false)
+    val enviando: StateFlow<Boolean> = _enviando.asStateFlow()
+    private val _errorEnvio = MutableStateFlow<String?>(null)
+    val errorEnvio: StateFlow<String?> = _errorEnvio.asStateFlow()
 
     fun actualizarNombre(valor: String) {
         _formulario.value = _formulario.value.copy(nombre = valor)
@@ -78,11 +85,21 @@ class ContactoViewModel(application: Application) : AndroidViewModel(application
             return false
         }
         viewModelScope.launch {
-            repositorio.save(_formulario.value)
-            _formulario.value = ContactoModel()
-            _guardadoCorrectamente.value = true
+            _enviando.value = true
+            _errorEnvio.value = null
+            try {
+                repositorio.save(_formulario.value)
+                _formulario.value = ContactoModel()
+                _guardadoCorrectamente.value = true
+            } catch (e: Exception) {
+                _errorEnvio.value = mensajeDeError(e)
+            }
+            _enviando.value = false
         }
         return true
+    }
+    fun cerrarErrorEnvio() {
+        _errorEnvio.value = null
     }
     fun ocultarMensajeGuardado() {
         _guardadoCorrectamente.value = false

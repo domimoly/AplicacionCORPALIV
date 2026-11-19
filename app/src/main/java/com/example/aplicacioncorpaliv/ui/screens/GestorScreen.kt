@@ -31,6 +31,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,21 +46,18 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.aplicacioncorpaliv.data.Registro
+import com.example.aplicacioncorpaliv.model.Solicitud
 import com.example.aplicacioncorpaliv.model.EstadoSolicitud
 import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.EtiquetaEstado
 import com.example.aplicacioncorpaliv.viewmodel.GestorViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 // PANTALLA ACCESO GESTORES: es para el personal de CORPALIV (gestores de vinculación).
 // EXPLICAR: tiene DOS partes y la pantalla elige cuál mostrar según 'gestorActual' del ViewModel:
 //  - Si nadie inició sesión (null): formulario de login (LoginGestor).
 //  - Si ya inició sesión: panel con todas las solicitudes, donde puede cambiar su estado o eliminarlas (PanelGestor).
-// Las solicitudes son las mismas de 'Mis solicitudes' (misma base de datos Room); cuando exista el backend,
-// el panel las pedirá al microservicio ms-vinculacion con Retrofit.
+// EXPLICAR: el login se hace contra ms-admin y las solicitudes se piden a ms-vinculacion con Retrofit.
+// Estas son TODAS las solicitudes que están en el servidor (no solo las enviadas desde este teléfono).
 @Composable
 fun GestorScreen(
     modifier: Modifier = Modifier,
@@ -67,6 +65,7 @@ fun GestorScreen(
 ) {
     val gestorActual by viewModel.gestorActual.collectAsState()
     val errorLogin by viewModel.errorLogin.collectAsState()
+    val iniciando by viewModel.iniciando.collectAsState()
 
     // Se copia a una variable normal para poder preguntar si es null y luego usar el texto sin problemas
     val nombreGestor = gestorActual
@@ -75,6 +74,7 @@ fun GestorScreen(
         LoginGestor(
             modifier = modifier,
             error = errorLogin,
+            iniciando = iniciando,
             onIngresar = { correo, clave -> viewModel.iniciarSesion(correo, clave) }
         )
     } else {
@@ -91,6 +91,7 @@ fun GestorScreen(
 private fun LoginGestor(
     modifier: Modifier,
     error: String?,
+    iniciando: Boolean,
     onIngresar: (String, String) -> Unit
 ) {
     // remember: guarda lo que se escribe mientras la pantalla se redibuja. La clave NO se guarda con rememberSaveable a propósito
@@ -157,12 +158,13 @@ private fun LoginGestor(
 
         Button(
             onClick = { onIngresar(correo, clave) },
+            enabled = !iniciando,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Ingresar")
+            Text(if (iniciando) "Ingresando..." else "Ingresar")
         }
 
-        // Ayuda solo para la versión de demostración (datos ficticios). Se quitará cuando haya login real con el backend
+        // Ayuda solo para la demostración: son las cuentas de prueba (datos ficticios) que crea el backend al iniciar
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -191,12 +193,15 @@ private fun PanelGestor(
     nombreGestor: String,
     viewModel: GestorViewModel
 ) {
-    val registros by viewModel.registros.collectAsState(initial = emptyList())
+    val solicitudes by viewModel.solicitudes.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+    val mensaje by viewModel.aviso.collectAsState()
+
+    // Al abrir el panel se piden las solicitudes al servidor
+    LaunchedEffect(Unit) { viewModel.cargar() }
 
     // Solicitud que se está editando. Si es null, el cuadro de diálogo está cerrado
-    var registroEditando by remember { mutableStateOf<Registro?>(null) }
-    // Mensaje corto que confirma la última acción (cambió estado / eliminó)
-    var mensaje by remember { mutableStateOf("") }
+    var solicitudEditando by remember { mutableStateOf<Solicitud?>(null) }
 
     Column(
         modifier = modifier
@@ -222,21 +227,26 @@ private fun PanelGestor(
 
         Spacer(Modifier.height(16.dp))
         // count { condición } cuenta cuántas solicitudes cumplen la condición (aquí, las que siguen en estado RECIBIDA)
-        val porAtender = registros.count { it.estado == EstadoSolicitud.RECIBIDA }
+        val porAtender = solicitudes.count { it.estado == EstadoSolicitud.RECIBIDA }
         Text(
-            text = "Solicitudes: ${registros.size} (por atender: $porAtender)",
+            text = "Solicitudes: ${solicitudes.size} (por atender: $porAtender)",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold
         )
 
-        if (mensaje.isNotBlank()) {
+        // El aviso puede ser una confirmación ('Estado actualizado') o el error que respondió el servidor
+        mensaje?.let {
             Spacer(Modifier.height(4.dp))
-            Text(mensaje, color = MaterialTheme.colorScheme.primary)
+            Text(it, color = MaterialTheme.colorScheme.primary)
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(onClick = { viewModel.cargar() }, enabled = !cargando) {
+            Text(if (cargando) "Cargando..." else "Actualizar lista")
         }
         Spacer(Modifier.height(8.dp))
 
-        if (registros.isEmpty()) {
-            Text("Todavía no hay solicitudes. Cuando alguien envíe el formulario Colaborar, aparecerá aquí.")
+        if (solicitudes.isEmpty()) {
+            Text("No hay solicitudes para mostrar. Cuando alguien envíe el formulario Colaborar, aparecerá aquí.")
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -245,7 +255,7 @@ private fun PanelGestor(
                     .fillMaxWidth()
             ) {
                 // key = { it.id } ayuda a Compose a reconocer cada solicitud aunque cambie el orden o el contenido de la lista
-                items(registros, key = { it.id }) { registro ->
+                items(solicitudes, key = { it.id }) { solicitud ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -259,25 +269,22 @@ private fun PanelGestor(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = registro.nombre,
+                                    text = solicitud.nombre,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f)
                                 )
-                                EtiquetaEstado(estado = registro.estado)
+                                EtiquetaEstado(estado = solicitud.estado)
                             }
                             Spacer(Modifier.height(4.dp))
                             // El monto solo existe en las donaciones; el tipo se muestra con su nombre (no con el código)
-                            val tipoTexto = TiposColaboracion.nombre(registro.tipo)
-                            Text(if (registro.monto > 0) "$tipoTexto - ${registro.monto} CLP" else tipoTexto)
+                            val tipoTexto = TiposColaboracion.nombre(solicitud.tipo)
+                            val monto = solicitud.monto ?: 0
+                            Text(if (monto > 0) "$tipoTexto - $monto CLP" else tipoTexto)
                             // El gestor necesita el medio de contacto para poder responder, y el código para identificar la solicitud
-                            if (registro.medioContacto.isNotBlank()) {
-                                Text("Contacto: ${registro.medioContacto}")
-                            }
-                            if (registro.codigoSeguimiento.isNotBlank()) {
-                                Text("Código: ${registro.codigoSeguimiento}")
-                            }
-                            if (registro.prioritario) {
+                            Text("Contacto: ${solicitud.medioContacto}")
+                            Text("Código: ${solicitud.codigoSeguimiento}")
+                            if (solicitud.prioritario) {
                                 Text(
                                     text = "Contacto prioritario",
                                     fontWeight = FontWeight.SemiBold,
@@ -285,18 +292,20 @@ private fun PanelGestor(
                                 )
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text(registro.mensaje)
+                            if (!solicitud.mensaje.isNullOrBlank()) {
+                                Text(solicitud.mensaje)
+                            }
                             Spacer(Modifier.height(4.dp))
+                            // El servidor entrega la fecha como '2026-11-19T10:15:30': se muestran solo los primeros 10 caracteres (el día)
                             Text(
-                                text = "Enviada el " + SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                                    .format(Date(registro.createdAt)),
+                                text = "Enviada el " + (solicitud.fechaCreacion?.take(10) ?: "-"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            if (registro.observacion.isNotBlank()) {
+                            if (!solicitud.observacion.isNullOrBlank()) {
                                 Spacer(Modifier.height(4.dp))
                                 Text(
-                                    text = "Observación: ${registro.observacion}",
+                                    text = "Observación: ${solicitud.observacion}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -306,15 +315,12 @@ private fun PanelGestor(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                             ) {
                                 OutlinedButton(
-                                    onClick = {
-                                        viewModel.eliminar(registro)
-                                        mensaje = "Solicitud eliminada."
-                                    }
+                                    onClick = { viewModel.eliminar(solicitud) }
                                 ) {
                                     Text("Eliminar")
                                 }
-                                // Al tocar este botón se guarda la solicitud en 'registroEditando' y se abre el cuadro de diálogo
-                                Button(onClick = { registroEditando = registro }) {
+                                // Al tocar este botón se guarda la solicitud en 'solicitudEditando' y se abre el cuadro de diálogo
+                                Button(onClick = { solicitudEditando = solicitud }) {
                                     Text("Cambiar estado")
                                 }
                             }
@@ -325,16 +331,15 @@ private fun PanelGestor(
         }
     }
 
-    // ?.let { } ejecuta el bloque SOLO si registroEditando no es null, o sea, solo cuando hay un diálogo abierto
-    registroEditando?.let { registro ->
+    // ?.let { } ejecuta el bloque SOLO si solicitudEditando no es null, o sea, solo cuando hay un diálogo abierto
+    solicitudEditando?.let { solicitud ->
         DialogCambiarEstado(
-            registro = registro,
+            solicitud = solicitud,
             onGuardar = { estado, observacion ->
-                viewModel.cambiarEstado(registro, estado, observacion)
-                mensaje = "Estado actualizado: ${EstadoSolicitud.texto(estado)}."
-                registroEditando = null
+                viewModel.cambiarEstado(solicitud, estado, observacion)
+                solicitudEditando = null
             },
-            onCancelar = { registroEditando = null }
+            onCancelar = { solicitudEditando = null }
         )
     }
 }
@@ -344,13 +349,13 @@ private fun PanelGestor(
 // Guarda lo elegido en variables propias y solo avisa a la pantalla cuando se toca 'Guardar' (onGuardar).
 @Composable
 private fun DialogCambiarEstado(
-    registro: Registro,
+    solicitud: Solicitud,
     onGuardar: (String, String) -> Unit,
     onCancelar: () -> Unit
 ) {
-    // remember(registro.id): si se abre el diálogo para otra solicitud, estas variables vuelven a empezar con sus datos
-    var estadoElegido by remember(registro.id) { mutableStateOf(registro.estado) }
-    var observacion by remember(registro.id) { mutableStateOf(registro.observacion) }
+    // remember(solicitud.id): si se abre el diálogo para otra solicitud, estas variables vuelven a empezar con sus datos
+    var estadoElegido by remember(solicitud.id) { mutableStateOf(solicitud.estado) }
+    var observacion by remember(solicitud.id) { mutableStateOf(solicitud.observacion.orEmpty()) }
 
     AlertDialog(
         onDismissRequest = onCancelar,
@@ -360,7 +365,7 @@ private fun DialogCambiarEstado(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Solicitud de ${registro.nombre}")
+                Text("Solicitud de ${solicitud.nombre}")
                 // Mismo patrón de opciones del tamaño de texto en Configuración: una fila tocable por cada opción
                 Column(modifier = Modifier.selectableGroup()) {
                     EstadoSolicitud.todos.forEach { estado ->
