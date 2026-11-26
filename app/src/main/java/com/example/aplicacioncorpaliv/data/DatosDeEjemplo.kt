@@ -28,16 +28,17 @@ object DatosDeEjemplo {
             "Inclusión laboral")
     )
 
+    // EXPLICAR: los números (id) siguen el mismo orden que los productos que crea ms-catalogo al iniciar
     val productos = listOf(
-        ProductoItem("Difusor de aroma 100 ml", "Bienestar", "Ambienta tu espacio con aromas suaves, hecho a mano.", "\$7.500"),
-        ProductoItem("Difusor de aroma 250 ml", "Bienestar", "Formato grande para hogares y oficinas.", "\$12.000"),
-        ProductoItem("Difusor de varilla", "Bienestar", "Aroma continuo y decoración en un solo producto.", "\$17.000"),
-        ProductoItem("Guatero de semillas grande", "Bienestar", "Calor natural para relajar, relleno con semillas.", "\$11.990"),
-        ProductoItem("Farol de luz", "Otros", "Luz cálida para dar un toque especial a cualquier rincón.", "\$11.900"),
-        ProductoItem("Bolsa Alba Lab", "Otros", "Bolsa reutilizable con el sello de Alba Lab.", "\$4.000"),
-        ProductoItem("Capacitación en inclusión", "Servicios", "Charla o taller para equipos de empresas y organizaciones.", "A cotizar"),
-        ProductoItem("Experiencia de concientización", "Servicios", "Actividad práctica para comprender la discapacidad múltiple.", "A cotizar"),
-        ProductoItem("Evaluación de accesibilidad", "Servicios", "Revisión de espacios y procesos para que sean accesibles.", "A cotizar")
+        ProductoItem("Difusor de aroma 100 ml", "Bienestar", "Ambienta tu espacio con aromas suaves, hecho a mano.", "\$7.500", id = 1),
+        ProductoItem("Difusor de aroma 250 ml", "Bienestar", "Formato grande para hogares y oficinas.", "\$12.000", id = 2),
+        ProductoItem("Difusor de varilla", "Bienestar", "Aroma continuo y decoración en un solo producto.", "\$17.000", id = 3),
+        ProductoItem("Guatero de semillas grande", "Bienestar", "Calor natural para relajar, relleno con semillas.", "\$11.990", id = 4),
+        ProductoItem("Farol de luz", "Otros", "Luz cálida para dar un toque especial a cualquier rincón.", "\$11.900", id = 5),
+        ProductoItem("Bolsa Alba Lab", "Otros", "Bolsa reutilizable con el sello de Alba Lab.", "\$4.000", id = 6),
+        ProductoItem("Capacitación en inclusión", "Servicios", "Charla o taller para equipos de empresas y organizaciones.", "A cotizar", id = 7),
+        ProductoItem("Experiencia de concientización", "Servicios", "Actividad práctica para comprender la discapacidad múltiple.", "A cotizar", id = 8),
+        ProductoItem("Evaluación de accesibilidad", "Servicios", "Revisión de espacios y procesos para que sean accesibles.", "A cotizar", id = 9)
     )
 
     val indicadores = listOf(

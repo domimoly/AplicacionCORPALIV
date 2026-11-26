@@ -64,6 +64,13 @@ object Validaciones {
         }
     }
 
+    // El producto solo se pide en 'Compra de productos' ('obligatorio' = true). En los demás tipos se ignora.
+    // EXPLICAR: es la misma idea que 'monto': una regla que solo se exige cuando el tipo de colaboración lo necesita.
+    fun producto(productoId: Int?, obligatorio: Boolean): String? {
+        if (!obligatorio) return null
+        return if (productoId == null) "Elige el producto o servicio que te interesa" else null
+    }
+
     // Para Perfil, donde los datos son opcionales: si está vacío no hay error; si tiene algo, se valida
     fun nombreOpcional(valor: String): String? = if (valor.isBlank()) null else nombre(valor)
     fun medioContactoOpcional(valor: String): String? = if (valor.isBlank()) null else medioContacto(valor)

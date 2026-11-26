@@ -29,6 +29,8 @@ class RegistroRepository(
     suspend fun save(datos: FormularioModel): String {
         // El monto solo cuenta en las donaciones; en los demás tipos no se envía
         val esDonacion = datos.categoria == TiposColaboracion.DONACION
+        // El producto solo cuenta en 'Compra de productos'; en los demás tipos no se envía
+        val esCompra = datos.categoria == TiposColaboracion.COMPRA
         val solicitud = SolicitudRequest(
             nombre = datos.nombre.trim(),
             medioContacto = datos.medioContacto.trim(),
@@ -37,7 +39,8 @@ class RegistroRepository(
             monto = if (esDonacion) datos.cantidad.toIntOrNull() else null,
             fechaContacto = datos.fecha?.let { fechaATexto(it) },
             prioritario = datos.activo,
-            aceptaPrivacidad = datos.aceptaTerminos
+            aceptaPrivacidad = datos.aceptaTerminos,
+            productoId = if (esCompra) datos.productoId else null
         )
         val respuesta = api.crear(solicitud)
 

@@ -46,11 +46,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.aplicacioncorpaliv.model.ProductoItem
 import com.example.aplicacioncorpaliv.model.Solicitud
 import com.example.aplicacioncorpaliv.model.EstadoSolicitud
 import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.EtiquetaEstado
 import com.example.aplicacioncorpaliv.viewmodel.GestorViewModel
+import com.example.aplicacioncorpaliv.viewmodel.ProductosViewModel
 
 // PANTALLA ACCESO GESTORES: es para el personal de CORPALIV (gestores de vinculación).
 // EXPLICAR: tiene DOS partes y la pantalla elige cuál mostrar según 'gestorActual' del ViewModel:
@@ -61,9 +63,12 @@ import com.example.aplicacioncorpaliv.viewmodel.GestorViewModel
 @Composable
 fun GestorScreen(
     modifier: Modifier = Modifier,
-    viewModel: GestorViewModel = viewModel()
+    viewModel: GestorViewModel = viewModel(),
+    productosViewModel: ProductosViewModel = viewModel()
 ) {
     val gestorActual by viewModel.gestorActual.collectAsState()
+    // EXPLICAR: el servidor guarda solo el NÚMERO del producto; el catálogo se usa para mostrar su nombre en cada solicitud
+    val productos by productosViewModel.productos.collectAsState()
     val errorLogin by viewModel.errorLogin.collectAsState()
     val iniciando by viewModel.iniciando.collectAsState()
 
@@ -81,7 +86,8 @@ fun GestorScreen(
         PanelGestor(
             modifier = modifier,
             nombreGestor = nombreGestor,
-            viewModel = viewModel
+            viewModel = viewModel,
+            productos = productos
         )
     }
 }
@@ -191,7 +197,8 @@ private fun LoginGestor(
 private fun PanelGestor(
     modifier: Modifier,
     nombreGestor: String,
-    viewModel: GestorViewModel
+    viewModel: GestorViewModel,
+    productos: List<ProductoItem>
 ) {
     val solicitudes by viewModel.solicitudes.collectAsState()
     val cargando by viewModel.cargando.collectAsState()
@@ -281,6 +288,11 @@ private fun PanelGestor(
                             val tipoTexto = TiposColaboracion.nombre(solicitud.tipo)
                             val monto = solicitud.monto ?: 0
                             Text(if (monto > 0) "$tipoTexto - $monto CLP" else tipoTexto)
+                            // Solo las solicitudes de 'Compra de productos' traen un producto: se busca su nombre en el catálogo
+                            solicitud.productoId?.let { idProducto ->
+                                val nombreProducto = productos.firstOrNull { it.id == idProducto }?.nombre ?: "N.º $idProducto"
+                                Text("Producto: $nombreProducto")
+                            }
                             // El gestor necesita el medio de contacto para poder responder, y el código para identificar la solicitud
                             Text("Contacto: ${solicitud.medioContacto}")
                             Text("Código: ${solicitud.codigoSeguimiento}")

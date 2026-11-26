@@ -13,7 +13,9 @@ data class SolicitudRequest(
     val monto: Int? = null,
     val fechaContacto: String? = null,
     val prioritario: Boolean = false,
-    val aceptaPrivacidad: Boolean
+    val aceptaPrivacidad: Boolean,
+    // EXPLICAR: id del producto (de ms-catalogo). Solo se envía en 'Compra de productos'; ms-vinculacion comprueba que exista
+    val productoId: Int? = null
 )
 
 // Lo que el servidor RESPONDE al crear una solicitud o al consultar con el código: el estado, SIN datos personales
@@ -38,7 +40,9 @@ data class Solicitud(
     val prioritario: Boolean = false,
     val estado: String,
     val observacion: String? = null,
-    val fechaCreacion: String? = null
+    val fechaCreacion: String? = null,
+    // Producto por el que consultó la persona (solo en 'Compra de productos'). El panel busca su nombre en el catálogo
+    val productoId: Int? = null
 )
 
 // Lo que el gestor ENVÍA en PATCH /solicitudes/{id}/estado

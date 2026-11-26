@@ -113,6 +113,36 @@ class FormularioViewModelTest {
     }
 
     @Test
+    fun `en una compra el producto es obligatorio`() {
+        val viewModel = crearViewModel()
+        llenarFormulario(viewModel, TiposColaboracion.COMPRA)
+
+        assertFalse(viewModel.validarFormulario())
+        assertEquals("Elige el producto o servicio que te interesa", viewModel.errores.value.producto)
+
+        viewModel.actualizarProducto(3)
+        assertTrue(viewModel.validarFormulario())
+        assertNull(viewModel.errores.value.producto)
+    }
+
+    @Test
+    fun `en los otros tipos el producto no se exige y se borra al cambiar de tipo`() {
+        val viewModel = crearViewModel()
+        llenarFormulario(viewModel, TiposColaboracion.VOLUNTARIADO)
+
+        // Voluntariado no necesita producto: el formulario es válido sin elegir ninguno
+        assertTrue(viewModel.validarFormulario())
+        assertNull(viewModel.errores.value.producto)
+
+        // Si se elige un producto en 'Compra' y luego se cambia de tipo, el producto se borra
+        viewModel.actualizarCategoria(TiposColaboracion.COMPRA)
+        viewModel.actualizarProducto(3)
+        assertEquals(3, viewModel.formulario.value.productoId)
+        viewModel.actualizarCategoria(TiposColaboracion.VOLUNTARIADO)
+        assertNull(viewModel.formulario.value.productoId)
+    }
+
+    @Test
     fun `guardar con datos invalidos no llama al servidor`() {
         val viewModel = crearViewModel()
 

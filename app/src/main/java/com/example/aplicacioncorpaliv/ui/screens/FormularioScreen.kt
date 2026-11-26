@@ -73,8 +73,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.example.aplicacioncorpaliv.model.TiposColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.BotonEscuchar
+import com.example.aplicacioncorpaliv.ui.componentes.ModalidadesColaboracion
 import com.example.aplicacioncorpaliv.ui.componentes.TarjetaFeriados
 import com.example.aplicacioncorpaliv.viewmodel.FormularioViewModel
+import com.example.aplicacioncorpaliv.viewmodel.ProductosViewModel
 
 import kotlinx.coroutines.delay
 
@@ -88,7 +90,8 @@ import java.util.Locale
 fun FormularioScreen(
     modifier: Modifier = Modifier,
     onVerMisSolicitudes: () -> Unit = {},
-    viewModel: FormularioViewModel = viewModel()
+    viewModel: FormularioViewModel = viewModel(),
+    productosViewModel: ProductosViewModel = viewModel()
 ) {
     // collectAsState | Sirva para cada vez que el ViewModel cambia un dato, la pantalla se vuelve a dibujar sola
     val formulario by
@@ -110,6 +113,9 @@ fun FormularioScreen(
     // EXPLICAR: 'enviando' viene del ViewModel y es true mientras se espera la respuesta del servidor. 'errorEnvio' trae el mensaje si falló
     val cargando by viewModel.enviando.collectAsState()
     val errorEnvio by viewModel.errorEnvio.collectAsState()
+
+    // EXPLICAR: la lista de productos para 'Compra de productos' sale del mismo ViewModel de la pantalla Productos (ms-catalogo)
+    val productos by productosViewModel.productos.collectAsState()
 
     // =====================================================================================================
     // DICTADO POR VOZ (hablar en vez de escribir el mensaje)
@@ -141,6 +147,7 @@ fun FormularioScreen(
     // EXPLICAR: la lista de tipos vive en model/TipoColaboracion.kt (es la misma que usará el servidor más adelante)
     val tipos = TiposColaboracion.todos
     var categoriaExpandida by remember { mutableStateOf(false) }
+    var productoExpandido by remember { mutableStateOf(false) }
 
     // Al abrir la pantalla se rellenan nombre y contacto con lo que la persona guardó en 'Perfil'
     LaunchedEffect(Unit) {
@@ -176,7 +183,7 @@ fun FormularioScreen(
         OutlinedTextField(
             value = formulario.nombre,
             onValueChange = { viewModel.actualizarNombre(it) },
-            label = { Text("Nombre") },
+            label = { Text("Nombre y empresa (si corresponde)") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = errores.nombre != null,
@@ -273,6 +280,9 @@ fun FormularioScreen(
             }
         }
 
+        // Explica cada modalidad y a qué ayuda el aporte (tarjeta que se despliega al tocarla)
+        ModalidadesColaboracion()
+
         // Lista desplegable para elegir el tipo de colaboración
         ExposedDropdownMenuBox(
             expanded = categoriaExpandida,
@@ -321,6 +331,46 @@ fun FormularioScreen(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(start = 8.dp)
                 )
+            }
+        }
+
+        // EXPLICAR: igual que el monto, esta lista solo aparece cuando el tipo es 'Compra de productos'.
+        // La persona elige un producto o servicio del catálogo y se guarda su número (productoId), no su nombre.
+        AnimatedVisibility(visible = formulario.categoria == TiposColaboracion.COMPRA) {
+            ExposedDropdownMenuBox(
+                expanded = productoExpandido,
+                onExpandedChange = { productoExpandido = !productoExpandido })
+            {
+                OutlinedTextField(
+                    value = productos.firstOrNull { it.id == formulario.productoId }?.nombre ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Producto o servicio") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = productoExpandido) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    isError = errores.producto != null,
+                    // Muestra el error si lo hay; si no, avisa mientras el catálogo todavía se está cargando
+                    supportingText = {
+                        val aviso = errores.producto ?: if (productos.isEmpty()) "Cargando productos..." else null
+                        aviso?.let { Text(it) }
+                    }
+                )
+
+                ExposedDropdownMenu(
+                    expanded = productoExpandido,
+                    onDismissRequest = { productoExpandido = false })
+                {
+                    productos.forEach { producto ->
+                        DropdownMenuItem(
+                            text = { Text(producto.nombre + " - " + producto.precio) },
+                            onClick = {
+                                viewModel.actualizarProducto(producto.id)
+                                productoExpandido = false
+                            })
+                    }
+                }
             }
         }
 

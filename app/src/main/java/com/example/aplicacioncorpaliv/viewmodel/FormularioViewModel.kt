@@ -24,7 +24,8 @@ data class FormularioErrores(
     val descripcion: String? = null,
     val cantidad: String? = null,
     val aceptaTerminos: String? = null,
-    val categoria: String? = null
+    val categoria: String? = null,
+    val producto: String? = null
 )
 
 // AVANZADO: @JvmOverloads hace que Kotlin cree también el constructor que recibe SOLO 'application' (el que usa viewModel() en la app).
@@ -78,8 +79,18 @@ class FormularioViewModel @JvmOverloads constructor(
         _formulario.value = _formulario.value.copy(fecha = valor)
     }
     // 'valor' es el CÓDIGO del tipo (por ejemplo 'DONACION')
+    // EXPLICAR: el producto solo se usa en 'Compra de productos'. Si la persona cambia a otro tipo, se borra el producto
+    // que había elegido, para no enviar un dato que ya no corresponde.
     fun actualizarCategoria(valor: String) {
-        _formulario.value = _formulario.value.copy(categoria = valor)
+        val actual = _formulario.value
+        _formulario.value = actual.copy(
+            categoria = valor,
+            productoId = if (valor == TiposColaboracion.COMPRA) actual.productoId else null
+        )
+    }
+    // 'valor' es el número (id) del producto elegido en la lista desplegable
+    fun actualizarProducto(valor: Int?) {
+        _formulario.value = _formulario.value.copy(productoId = valor)
     }
 
     // EXPLICAR: trae el nombre y el contacto guardados en 'Perfil' y los escribe en el formulario,
@@ -100,6 +111,7 @@ class FormularioViewModel @JvmOverloads constructor(
     fun validarFormulario(): Boolean {
         val datos = _formulario.value
         val esDonacion = datos.categoria == TiposColaboracion.DONACION
+        val esCompra = datos.categoria == TiposColaboracion.COMPRA
 
         val nuevosErrores = FormularioErrores(
             nombre = Validaciones.nombre(datos.nombre),
@@ -108,7 +120,9 @@ class FormularioViewModel @JvmOverloads constructor(
             // El monto solo se exige cuando el tipo es Donación
             cantidad = Validaciones.monto(datos.cantidad, obligatorio = esDonacion),
             aceptaTerminos = if (datos.aceptaTerminos) null else "Debes aceptar la política de privacidad para enviar",
-            categoria = if (datos.categoria.isBlank()) "Debe seleccionar un tipo de colaboración" else null
+            categoria = if (datos.categoria.isBlank()) "Debe seleccionar un tipo de colaboración" else null,
+            // El producto solo se exige cuando el tipo es Compra de productos
+            producto = Validaciones.producto(datos.productoId, obligatorio = esCompra)
         )
         _errores.value = nuevosErrores
         return nuevosErrores == FormularioErrores()

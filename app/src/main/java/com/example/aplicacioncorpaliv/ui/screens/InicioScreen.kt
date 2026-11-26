@@ -143,7 +143,7 @@ fun InicioScreen(
             }
 
             Text(
-                text = "Nuestro impacto (datos de ejemplo)",
+                text = "Nuestro impacto",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )

@@ -84,6 +84,22 @@ class RegistroRepositoryTest {
     }
 
     @Test
+    fun `save envia el producto solo cuando el tipo es compra`() = runTest {
+        val enviada = slot<SolicitudRequest>()
+        coEvery { api.crear(capture(enviada)) } returns Seguimiento("COL-CCCC4444", "COMPRA", "RECIBIDA")
+        coEvery { dao.insert(any()) } just Runs
+        val repositorio = crearRepositorio()
+
+        // Compra: el productoId viaja al servidor
+        repositorio.save(formularioDonacion().copy(categoria = "COMPRA", productoId = 3))
+        assertEquals(3, enviada.captured.productoId)
+
+        // Otro tipo con un producto sobrante: NO se envía
+        repositorio.save(formularioDonacion().copy(categoria = "VOLUNTARIADO", productoId = 3))
+        assertNull(enviada.captured.productoId)
+    }
+
+    @Test
     fun `save no guarda nada si el servidor falla`() = runTest {
         coEvery { api.crear(any()) } throws IOException("sin conexión")
         val repositorio = crearRepositorio()

@@ -24,6 +24,7 @@ class CatalogoRepositoryTest {
         val productos = repositorio.getProductos()
 
         assertEquals(1, productos.size)
+        assertEquals(10, productos[0].id)
         assertEquals("Alimentos", productos[0].categoria)
         assertEquals("$3.500", productos[0].precio)
     }
@@ -38,6 +39,7 @@ class CatalogoRepositoryTest {
 
         val productos = repositorio.getProductos()
 
+        assertEquals(11, productos[0].id)
         assertEquals("Otros", productos[0].categoria)
         assertEquals("A cotizar", productos[0].precio)
         assertEquals("A cotizar", productos[1].precio)

@@ -11,5 +11,7 @@ data class FormularioModel(
     val aceptaTerminos: Boolean = false,
     val activo: Boolean = false,
     val fecha: Long? = null,
-    val categoria: String = ""
+    val categoria: String = "",
+    // EXPLICAR: número (id) del producto elegido en 'Compra de productos'. null = todavía no se elige ninguno
+    val productoId: Int? = null
 )

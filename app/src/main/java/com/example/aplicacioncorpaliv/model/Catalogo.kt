@@ -24,5 +24,7 @@ data class ProductoItem(
     val categoria: String,
     val descripcion: String,
     val precio: String,
-    val imagenUrl: String? = null
+    val imagenUrl: String? = null,
+    // EXPLICAR: el número del producto en el servidor. El formulario lo envía como 'productoId'; 0 = sin número
+    val id: Int = 0
 )

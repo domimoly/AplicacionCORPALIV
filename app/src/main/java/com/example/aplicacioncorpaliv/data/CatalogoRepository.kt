@@ -14,6 +14,7 @@ class CatalogoRepository(
         val nombresDeCategorias = api.getCategorias().associate { it.id to it.nombre }
         return api.getProductos().map { producto ->
             ProductoItem(
+                id = producto.id,
                 nombre = producto.nombre,
                 categoria = nombresDeCategorias[producto.categoriaId] ?: "Otros",
                 descripcion = producto.descripcion,

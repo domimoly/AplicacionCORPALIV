@@ -133,9 +133,12 @@ private fun ItemBienvenida(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary
         )
+        // EXPLICAR: esta pantalla no usa Scaffold ni Surface, así que Compose no sabe de qué color escribir el texto
+        // (por defecto usa negro). Con el tema oscuro, negro sobre fondo negro no se ve. Por eso se indica 'onBackground'.
         Text(
             text = texto,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
