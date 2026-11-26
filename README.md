@@ -76,11 +76,11 @@ El equipo de CORPALIV (gestores) entra con correo y clave para revisar las solic
 | **Bienvenida** | Pantalla inicial con el logo y qué se puede hacer en la app. Tiene un botón discreto de "Acceso gestores" para el equipo. |
 | **Inicio** | Mensaje de bienvenida, cifras de ejemplo y botones para ir a Colaborar y a Contacto. |
 | **Quiénes somos, Programas, Productos e Impacto** | Tarjetas que se expanden, filtro por categoría, historias e indicadores de impacto. Programas, Productos e Impacto vienen de los microservicios (con datos de respaldo si no hay conexión). |
-| **Colaborar** | Formulario con nombre, correo o teléfono, mensaje (se puede **dictar por voz**), tipo de colaboración, monto (solo si es donación), fecha opcional, contacto prioritario y política de privacidad. Cada campo se valida y muestra un ícono y un mensaje si hay un error. Arriba muestra los **próximos feriados de Chile** (API externa) para ayudar a elegir la fecha. Al enviar, el servidor entrega un **código de seguimiento** que se puede copiar. |
+| **Colaborar** | Formulario con nombre y empresa (si corresponde), correo o teléfono, mensaje (se puede **dictar por voz**), una tarjeta que explica cada **modalidad de colaboración** y a qué ayuda el aporte, tipo de colaboración, **producto o servicio** (una lista que aparece solo si el tipo es "Compra de productos"), monto (solo si es donación), fecha opcional, contacto prioritario y política de privacidad. La app registra el interés y no hace pagos. Cada campo se valida y muestra un ícono y un mensaje si hay un error. Arriba muestra los **próximos feriados de Chile** (API externa) para ayudar a elegir la fecha. Al enviar, el servidor entrega un **código de seguimiento** que se puede copiar. |
 | **Mis solicitudes** | Lista de las solicitudes enviadas con su estado y el mensaje del equipo; el botón **Actualizar estados** pregunta al servidor el estado actual. Se puede consultar una solicitud escribiendo su código. También muestra los mensajes enviados por Contacto, con botón para eliminar. |
 | **Contacto** | Formulario con nombre, correo, mensaje y casilla de privacidad, también con validaciones. El mensaje llega al servidor como una solicitud de tipo "Otro". |
 | **Perfil** | Guarda nombre y correo o teléfono (rellenan solos los formularios) y permite elegir una imagen desde la galería o tomarla con la cámara. |
-| **Acceso gestores** | Login para el equipo de CORPALIV (contra `ms-admin`). Dentro, el gestor ve **todas las solicitudes del servidor**, les cambia el estado, deja un mensaje o las elimina. |
+| **Acceso gestores** | Login para el equipo de CORPALIV (contra `ms-admin`). Dentro, el gestor ve **todas las solicitudes del servidor**, les cambia el estado, deja un mensaje o las elimina. En las solicitudes de compra ve también el producto elegido. |
 | **Configuración** | Accesibilidad (por ejemplo lectura en voz alta y alto contraste) y preferencia de novedades. Se abre con el engranaje, al final del menú lateral. |
 | **Navegación** | Menú lateral con grupos e íconos y barra inferior (Inicio, Colaborar, Contacto). |
 | **Animaciones** | Transición suave entre pantallas, mensajes de éxito que aparecen y desaparecen, íconos de error e indicador de carga al guardar. |
@@ -144,7 +144,7 @@ El equipo de CORPALIV (gestores) entra con correo y clave para revisar las solic
   <img src="https://img.shields.io/badge/Trello-00A878?style=flat-square&logo=trello&logoColor=white" alt="Trello">
 </p>
 
-Enlace al tablero de Trello: **[pendiente]**
+Enlace al tablero de Trello: **[CORPALIV - DSY1105](https://trello.com/b/0xajfhos/corpaliv-dsy1105)**
 
 ## Cómo está organizado el proyecto
 
@@ -206,7 +206,7 @@ Los que dicen **token** requieren el encabezado `Authorization: Bearer <token>`.
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
-| ![POST](https://img.shields.io/badge/POST-6A60AA?style=flat-square) | `/solicitudes` | público | Crea una solicitud y devuelve su código de seguimiento |
+| ![POST](https://img.shields.io/badge/POST-6A60AA?style=flat-square) | `/solicitudes` | público | Crea una solicitud y devuelve su código de seguimiento. En las compras recibe el `productoId` y `ms-vinculacion` comprueba con `ms-catalogo` que exista |
 | ![GET](https://img.shields.io/badge/GET-00A878?style=flat-square) | `/solicitudes/seguimiento/{codigo}` | público | Estado de una solicitud (sin datos personales) |
 | ![GET](https://img.shields.io/badge/GET-00A878?style=flat-square) | `/tipos-colaboracion` | público | Tipos de colaboración |
 | ![GET](https://img.shields.io/badge/GET-00A878?style=flat-square) | `/solicitudes` (filtro opcional `?estado=`), `/solicitudes/{id}`, `/solicitudes/{id}/historial` | token | Consulta para el gestor |
@@ -289,9 +289,17 @@ Para ejecutarlas desde la terminal, en la carpeta del proyecto Android:
 |---|---|
 | APK firmado (release) | [`app/release/app-release.apk`](app/release/app-release.apk) |
 | Archivo `.jks` (en el repositorio) | [`corpaliv.jks`](corpaliv.jks) |
-| Captura de la generación del APK firmado | **[pendiente]** |
+| Captura de la generación del APK firmado | [`capturas/apk-firmado-resultado.png`](capturas/apk-firmado-resultado.png) |
 
 Datos del `.jks` (clave de uso académico, no protege nada real): alias `corpaliv`, clave del almacén y de la clave `corpaliv2026`.
+
+Generación del APK firmado en Android Studio (Build → Generate Signed App Bundle or APK), con la variante `release` y la llave `corpaliv`:
+
+![Ventana de generación del APK firmado](capturas/apk-firmado-ventana.png)
+
+Resultado: el aviso de que el APK se generó y el archivo `app-release.apk` en `app/release`:
+
+![APK firmado generado](capturas/apk-firmado-resultado.png)
 
 ## Cosas que faltan por mejorar
 
@@ -299,6 +307,8 @@ Datos del `.jks` (clave de uso académico, no protege nada real): alias `corpali
 - [ ] Guardar en el teléfono los programas, productos e impacto para verlos sin conexión (hoy se usan datos de respaldo fijos).
 - [ ] Permitir al gestor crear y editar programas y productos desde la app (hoy los endpoints existen, pero solo se usan desde Swagger).
 - [ ] Guardar la imagen del perfil al cerrar la app.
+- [ ] Agregar el campo "organización" en las alianzas empresariales (hoy la empresa se escribe junto al nombre).
+- [ ] Que el botón "Solicitar" de cada producto abra el formulario con el producto ya elegido.
 - [ ] Cambiar los datos de ejemplo por información real autorizada por la organización.
 
 ---
