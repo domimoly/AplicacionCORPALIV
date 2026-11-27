@@ -258,9 +258,38 @@ Se usa con su propio Retrofit, repositorio y ViewModel, **separados** de los mic
 ./mvnw spring-boot:run
 ```
 
-4. Orden recomendado: `ms-admin`, `ms-contenidos`, `ms-catalogo` y por último `ms-vinculacion` (este consulta a `ms-contenidos` y `ms-catalogo`). Las bases de datos y los datos de ejemplo se crean solos al iniciar.
-5. Probar en Swagger: primero `POST /auth/login` en ms-admin con `gestor@ejemplo.cl` / `Gestor2026`, copiar el token y pegarlo en el botón **Authorize** de cada servicio.
+4. Se pueden encender los 4 a la vez, porque cada uno usa su propio puerto. El orden recomendado es `ms-admin`, `ms-contenidos`, `ms-catalogo` y por último `ms-vinculacion`: este solo consulta a `ms-contenidos` y `ms-catalogo` cuando una solicitud trae un programa o un producto, y si ese servicio está apagado en ese momento responde 503. Las bases de datos y los datos de ejemplo se crean solos al iniciar.
+5. Probar en Swagger o Postman (ver la sección siguiente): primero `POST /auth/login` en ms-admin con `gestor@ejemplo.cl` / `Gestor2026` y usar el token en los endpoints protegidos.
 6. Para el emulador, la app llama a `http://10.0.2.2:<puerto>` (así el emulador llega al computador).
+
+### Probar los endpoints con Swagger o Postman
+
+Cada servicio tiene su Swagger mientras está encendido:
+
+| Servicio | Swagger |
+|---|---|
+| `ms-contenidos` | http://localhost:9091/doc/swagger-ui.html |
+| `ms-vinculacion` | http://localhost:9092/doc/swagger-ui.html |
+| `ms-admin` | http://localhost:9093/doc/swagger-ui.html |
+| `ms-catalogo` | http://localhost:9094/doc/swagger-ui.html |
+
+**Con Swagger:** los endpoints públicos se prueban con **Try it out**. Para los que piden token:
+
+1. En `ms-admin`, `POST /auth/login` con `{"correo": "gestor@ejemplo.cl", "clave": "Gestor2026"}`.
+2. Copiar el `token` de la respuesta.
+3. Presionar **Authorize** y pegarlo **sin** escribir `Bearer`.
+
+Los 4 servicios usan la misma clave secreta, así que el mismo token sirve en todos. Dura 8 horas; si responde 401, hay que volver a hacer el login.
+
+**Con Postman:** hacer el mismo login (`POST http://localhost:9093/auth/login`, body `raw` en JSON). Después, en la pestaña **Authorization** elegir **Bearer Token** y pegar el token. Por ejemplo, para cambiar el estado de una solicitud: `PATCH http://localhost:9092/solicitudes/{id}/estado` con `{"estado": "EN_REVISION", "observacion": "Estamos revisando tu solicitud"}`.
+
+**Cómo se reflejan los cambios:**
+
+| Si se cambia... | Qué hacer |
+|---|---|
+| Código de un microservicio | Reiniciar ese servicio (no tiene recarga automática). Al volver a subir, Swagger muestra los endpoints nuevos. Un campo nuevo en una entidad crea su columna solo (`ddl-auto=update`). |
+| Código de la app | Volver a presionar **Run** en Android Studio. |
+| Ver el dato guardado | Abrir phpMyAdmin (XAMPP) y revisar la base del servicio, por ejemplo `bd_vinculacion`, tabla `solicitud_colaboracion`. |
 
 Para ejecutar las pruebas de un servicio: `./mvnw test`.
 
